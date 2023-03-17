@@ -1,0 +1,155 @@
+﻿@page "/category/edit/{Id}"
+@attribute [Authorize(Roles = "Admin")]
+@inject ICategoryRepository _repo
+@inject ICanteenRepository _canteenRepo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+<h3 class="card-title">Edit Category</h3>
+<hr />
+<br />
+@if (!isSuccess)
+{
+    <ErrorMessage Message="Somewthing Went Wrong With the Operation" />
+}
+
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+    <ErrorMessage Message="Invalid Selection. Please Try Again" />
+}
+else if (Model == null)
+{
+    <LoadingMessage Message="Loading Canteen For Edit" />
+}
+else
+{
+    <EditForm Model="Model" OnValidSubmit="EditCategory">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-group">
+            <label for="firstname"> Name</label>
+            <InputText @bind-Value="Model.Name" class="form-control" id="firstname" />
+        </div>
+        <div class="form-group">
+            <label for="author">Canteens</label>
+            <select @bind="Model.CanteenId" class="form-control" id="canteen">
+                <option value="">-- Select Canteens --</option>
+                @if (Canteens != null)
+                {
+                    foreach (var c in Canteens)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="bookcover">Photo</label>
+            <InputFile OnChange="HandleFileSelection" />
+            @if (isInvalidFileType)
+            {
+                <ErrorMessage Message="Please remove the invalid file type and select as new image, or leave this field blank" />
+            }
+            @if (!string.IsNullOrWhiteSpace(imageDataURL))
+            {
+                <img src="@imageDataURL" style="height:100px;width:100px" />
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.Image))
+            {
+                <img src="@string.Format("data:image/png;base64,{0}", Model.ImageFile)" style="height:100px;width:100px" />
+            }
+        </div>
+        <div>
+            <label for="Active">Active</label>
+            <InputCheckbox @bind-Value="Model.Status" class="form-control custom-checkbox" id="status" />
+        </div>
+
+        <button class="btn btn-primary" type="submit">
+            <span class="oi oi-pencil"></span>
+            Submit Changes
+        </button>
+        <button @onclick="BackToList" class="btn btn-outline-secondary">
+            <span class="oi oi-media-skip-backward"></span>
+            Back To List
+        </button>
+    </EditForm>
+}
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    private IList<Canteen> Canteens;
+    private Category Model = new Category();
+    private bool isSuccess = true;
+    private MemoryStream msFile;
+    private bool isInvalidFileType = false;
+    private bool isFileChanged = false;
+    private string imageDataURL;
+    private IFileListEntry file;
+    protected override async Task OnInitializedAsync()
+    {
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.CategoryEndpoint, id);
+        Canteens = await _canteenRepo.Get(Endpoints.CanteenEndpoint);
+    }
+
+    private async Task EditCategory()
+    {
+        if (!isInvalidFileType)
+        {
+            if (file != null)
+            {
+                var ext = Path.GetExtension(file.Name);
+                var picId = Guid.NewGuid().ToString().Replace("-", "");
+                var picName = $"{picId}{ext}";
+
+                Model.Image = picName;
+                Model.ImageFile = Convert.ToBase64String(msFile.ToArray());
+            }
+            else if (isFileChanged && file == null)
+            {
+                Model.Image = string.Empty;
+            }
+
+            isSuccess = await _repo.Update(Endpoints.CategoryEndpoint, Model, Model.Id);
+            if (isSuccess)
+            {
+                _toastService.ShowSuccess("Item Updated Successfully", "");
+                BackToList();
+            }
+        }
+
+    }
+    private async Task HandleFileSelection(IFileListEntry[] files)
+    {
+        file = files.FirstOrDefault();
+        isFileChanged = true;
+        if (file != null)
+        {
+            var name = file.Name;
+            if (name.Contains("jpg") || name.Contains("png") || name.Contains("jpeg"))
+            {
+                msFile = new MemoryStream();
+                await file.Data.CopyToAsync(msFile);
+
+                var reader = new StreamReader(file.Data);
+                var imageBase64Data = Convert.ToBase64String(msFile.ToArray());
+                imageDataURL = string.Format("data:image/png;base64,{0}", imageBase64Data);
+                isInvalidFileType = false;
+            }
+            else
+            {
+                isInvalidFileType = true;
+                imageDataURL = string.Empty;
+            }
+        }
+        else
+        {
+            isInvalidFileType = false;
+        }
+    }
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/category/");
+    }
+}

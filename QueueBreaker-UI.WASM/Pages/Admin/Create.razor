@@ -1,0 +1,148 @@
+﻿@page "/admin/create/"
+@attribute [Authorize(Roles = "SuperAdmin")]
+
+@inject IAdminRepository _repo
+@inject ICanteenRepository _authorRepo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+
+<h3>Create Admin</h3>
+<hr />
+<br />
+@if (!isSuccess)
+{
+    <ErrorMessage Message="Something Went Wrong With the Operation" />
+}
+
+<EditForm Model="Model" OnValidSubmit="adminCanteen">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    @*<div class="form-group">
+            <label for="price">Price</label>
+            <InputNumber @bind-Value="Model.EnrollmentNo" class="form-control" id="enrollmentNo" />
+        </div>*@
+    <div class="form-group">
+        <label for="title">First Name</label>
+        <InputText @bind-Value="Model.FirstName" class="form-control" id="firstName" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Last name</label>
+        <InputText @bind-Value="Model.LastName" class="form-control" id="lastName" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">City</label>
+        <InputText @bind-Value="Model.City" class="form-control" id="city" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">State</label>
+        <InputText @bind-Value="Model.State" class="form-control" id="state" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Country</label>
+        <InputText @bind-Value="Model.Country" class="form-control" id="country" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Address</label>
+        <InputTextArea @bind-Value="Model.Address" class="form-control" id="address" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Zip code</label>
+        <InputText @bind-Value="Model.ZipCode" class="form-control" id="zipcode" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Mobile No</label>
+        <InputText @bind-Value="Model.PhoneNumber" class="form-control" id="phone" />
+    </div>
+    <div class="form-group">
+        <label for="author">Canteens</label>
+        <select @bind="Model.CanteenId" class="form-control" id="canteen">
+            <option value="">-- Select Canteens --</option>
+            @if (Canteens != null)
+            {
+                foreach (var c in Canteens)
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            }
+        </select>
+    </div>
+    @*<div class="form-group">
+            <label for="price">Price</label>
+            <InputNumber @bind-Value="Model.EnrollmentNo" class="form-control" id="enrollmentNo" />
+        </div>*@
+    @*<div class="form-group">
+            <label for="admin">Canteen</label>
+            <select @bind="Model.CanteenId" class="form-control" id="author">
+                <option value="">-- Select Canteen --</option>
+                @if (Canteens != null)
+                {
+                    foreach (var c in Canteens)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                }
+            </select>
+        </div>*@
+    <div class="form-group">
+        <label for="summary">Email</label>
+        <InputText @bind-Value="Model.Email" class="form-control" id="email" />
+    </div>
+    <div class="form-group">
+        <label for="summary">Password</label>
+        <InputText @bind-Value="Model.Password" class="form-control" id="email" />
+    </div>
+    @*<div class="form-group">
+            <label for="summary">City</label>
+            <InputText @bind-Value="Model.City" class="form-control" id="city" />
+        </div>
+        <div class="form-group">
+            <label for="summary">State</label>
+            <InputText @bind-Value="Model.State" class="form-control" id="state" />
+        </div>
+        <div class="form-group">
+            <label for="summary">Country</label>
+            <InputText @bind-Value="Model.State" class="form-control" id="state" />
+        </div>*@
+    <button class="btn btn-primary" type="submit">
+        <span class="oi oi-pencil"></span>
+        Create user
+    </button>
+    <button @onclick="BackToList" class="btn btn-outline-secondary">
+        <span class="oi oi-media-skip-backward"></span>
+        Back To List
+    </button>
+</EditForm>
+
+@code {
+    private User Model = new User();
+    // private IList<Canteen> Canteens;
+    private IFileListEntry file;
+    private bool isSuccess = true;
+    private bool isInvalidFileType = false;
+    private string imageDataURL;
+    private MemoryStream msFile;
+    private IList<Canteen> Canteens;
+    protected override async Task OnInitializedAsync()
+    {
+        Canteens = await _authorRepo.Get(Endpoints.CanteenEndpoint);
+    }
+    private async Task adminCanteen()
+    {
+        if (!isInvalidFileType)
+        {
+
+            isSuccess = await _repo.Create(Endpoints.UserEndpoint, Model);
+            if (isSuccess)
+            {
+                _toastService.ShowSuccess("Admin User Created Successfully", "");
+                BackToList();
+            }
+        }
+    }
+
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/admin/");
+    }
+}

@@ -1,0 +1,58 @@
+﻿@page "/OrderItem/create/"
+@attribute [Authorize(Roles = "Admin")]
+
+@inject IOrderItemRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+
+
+<h3 class="card-title">Create New OrderItem</h3>
+<hr />
+<br />
+@if (!isSuccess)
+{
+    <ErrorMessage Message="Something Went Wrong With the Operation" />
+}
+
+
+<EditForm Model="Model" OnValidSubmit="CreateOrderItem">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="name">Name</label>
+        <InputText @bind-Value="Model.Item.Name" class="form-control" id="name" />
+    </div>
+    <div>
+        <label for="Active">Active</label>
+        <InputCheckbox @bind-Value="Model.Status" class="form-control custom-checkbox" id="status" />
+    </div>
+    <br />
+    <button class="btn btn-primary" type="submit">
+        <span class="oi oi-pencil"></span>
+        Create Canteen
+    </button>
+    <button @onclick="BackToList" class="btn btn-outline-secondary">
+        <span class="oi oi-media-skip-backward"></span>
+        Back To List
+    </button>
+</EditForm>
+
+@code{
+    private OrderItem Model = new OrderItem();
+    private bool isSuccess = true;
+    private async Task CreateOrderItem()
+    {
+
+        isSuccess = await _repo.Create(Endpoints.OrderItemEndpoint, Model);
+        if (isSuccess)
+        {
+            _toastService.ShowSuccess("OrderItem Created Successfully", "");
+            BackToList();
+        }
+    }
+   
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/OrderItem/");
+    }
+}

@@ -1,0 +1,170 @@
+﻿@page "/admin/edit/{Id}"
+
+@attribute [Authorize(Roles = "SuperAdmin")]
+
+@inject IAdminRepository _repo
+@inject ICanteenRepository _canteenRepo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+
+
+<h3>Edit User</h3>
+<hr />
+<br />
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+    <ErrorMessage Message="Invalid Selection. Please Try Again" />
+}
+else if (Model == null)
+{
+    <LoadingMessage Message="Loading User Details" />
+}
+else
+{
+<EditForm Model="Model" OnValidSubmit="EditCanteen">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    @*<div class="form-group">
+            <label for="enrollmentNo">EnrollmentNo</label>
+            <InputNumber @bind-Value="Model.EnrollmentNo" class="form-control" id="enrollmentNo" />
+        </div>*@
+    <div class="form-group">
+        <label for="title">First Name</label>
+        <InputText @bind-Value="Model.FirstName" class="form-control" id="firstName" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Last name</label>
+        <InputText @bind-Value="Model.LastName" class="form-control" id="lastName" />
+    </div>
+    <div class="form-group">
+        <label for="summary">Email</label>
+        <InputText @bind-Value="Model.Email" class="form-control" id="email" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">City</label>
+        <InputText @bind-Value="Model.City" class="form-control" id="city" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">State</label>
+        <InputText @bind-Value="Model.State" class="form-control" id="state" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Country</label>
+        <InputText @bind-Value="Model.Country" class="form-control" id="country" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Address</label>
+        <InputTextArea @bind-Value="Model.Address" class="form-control" id="address" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Zip code</label>
+        <InputText @bind-Value="Model.ZipCode" class="form-control" id="zipcode" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">Mobile No</label>
+        <InputText @bind-Value="Model.PhoneNumber" class="form-control" id="phone" />
+    </div>
+    <div class="form-group">
+        <label for="author">Canteens</label>
+        <select @bind="Model.CanteenId" class="form-control" id="canteen">
+            <option value="">-- Select Canteens --</option>
+            @if (Canteens != null)
+            {
+                foreach (var c in Canteens)
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            }
+        </select>
+    </div>
+
+    <button class="btn btn-primary" type="submit">
+        <span class="oi oi-pencil"></span>
+        Submit Changes
+    </button>
+    <button @onclick="BackToList" class="btn btn-outline-secondary">
+        <span class="oi oi-media-skip-backward"></span>
+        Back To List
+    </button>
+</EditForm>
+}
+
+@code{
+    [Parameter]
+    public string Id { get; set; }
+
+    private User Model = new User();
+    private IList<Canteen> Canteens;
+    private IFileListEntry file;
+    private bool isSuccess = true;
+    private bool isInvalidFileType = false;
+    private bool isFileChanged = false;
+    private string imageDataURL;
+    private MemoryStream msFile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.UserEndpoint, id);
+        @*Canteens = await _canteenRepo.Get(Endpoints.UserEndpoint);*@
+    Canteens = await _canteenRepo.Get(Endpoints.CanteenEndpoint);
+}
+
+private async Task EditCanteen()
+{
+    if (!isInvalidFileType)
+    {
+        if (file != null)
+        {
+            var ext = Path.GetExtension(file.Name);
+            var picId = Guid.NewGuid().ToString().Replace("-", "");
+            var picName = $"{picId}{ext}";
+
+
+        }
+
+
+        isSuccess = await _repo.Update(Endpoints.UserEndpoint, Model, Model.UserId);
+        if (isSuccess)
+        {
+            _toastService.ShowWarning("Admin User Updated Successfully", "");
+            BackToList();
+        }
+    }
+}
+private async Task HandleFileSelection(IFileListEntry[] files)
+{
+    file = files.FirstOrDefault();
+    isFileChanged = true;
+    if (file != null)
+    {
+        var name = file.Name;
+        if (name.Contains("jpg") || name.Contains("png") || name.Contains("jpeg"))
+        {
+            msFile = new MemoryStream();
+            await file.Data.CopyToAsync(msFile);
+
+            var reader = new StreamReader(file.Data);
+            var imageBase64Data = Convert.ToBase64String(msFile.ToArray());
+            imageDataURL = string.Format("data:image/png;base64,{0}", imageBase64Data);
+            isInvalidFileType = false;
+        }
+        else
+        {
+            isInvalidFileType = true;
+            imageDataURL = string.Empty;
+        }
+    }
+    else
+    {
+        isInvalidFileType = false;
+    }
+}
+
+
+
+private void BackToList()
+{
+    _navManager.NavigateTo("/admin/");
+}
+}

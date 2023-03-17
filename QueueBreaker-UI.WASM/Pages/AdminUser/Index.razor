@@ -1,0 +1,170 @@
+﻿@page "/userlist"
+
+@inject IUserProfileRepository _userrepo
+@inject IJSRuntime JSRuntime
+@inject IToastService _toastService
+
+
+<h3 class="card-title">User List</h3>
+<br/>
+
+@if (Model == null)
+{
+    <LoadingMessage Message="Loading User List" />
+}
+else
+{
+    <a href="register" class="btn btn-primary">
+        <span class="oi oi-plus"></span>
+        Register User
+    </a>
+    <br />
+    <br />
+    @if (Model.Count < 1)
+    {
+        <LoadingMessage Message="There are no Users in the data store.
+                        Click 'Register User' to Begin " />
+    }
+    else
+    {
+        <EditForm Model="Model1">
+            <div class="row">
+                <div class="col-md-4">
+                    <div>
+                        <label for="Active">InActive</label>
+                        <InputCheckbox @bind-Value="Model1.Active" class="form-control custom-checkbox" id="Active" />
+                    </div>
+                </div>
+            </div>
+            <br />
+            <button @onclick="Search" class="btn btn-primary" type="submit">
+                <span class="oi oi-pencil"></span>
+                Search
+            </button>
+        </EditForm>
+        <br/>
+        <body onbeforeunload="TestDataTablesRemove('#example')">
+            <table id="example"  class="table table-striped table-hover" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>Address</th>
+                        <th>City</th>
+                        <th>State</th>
+                        <th>Country</th>
+                        <th>Active</th>
+                        <th hidden="@hide2">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.UserName</td>
+                            <td>@user.Address1</td>
+                            <td>@user.City</td>
+                            <td>@user.State</td>
+                            <td>@user.Country</td>
+                            <td>
+                                @if (user.Active == true)
+                                {<text>Yes</text> }
+                            else
+                            {
+                                <text>No</text>
+                            }
+                            </td>
+                            <td hidden="@hide1">
+                                <a href="/userprofile/edit/@user.ProfileId" class="btn btn-warning">
+                                    <span class="oi oi-pencil"></span>
+                                </a>
+                                @*<a href="/userprofile/delete/@user.ProfileId" class="btn btn-danger">
+                                        <span class="oi oi-delete"></span>
+                                    </a>*@
+
+                                <button type="button" class="btn btn-danger" data-toggle="modal" @onclick="@(() => ConfirmDeleteId(user.ProfileId))" data-target="#DeleteDetails">
+                                    <span class="oi oi-delete"></span>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Modal -->
+            <div class="modal fade" id="DeleteDetails" tabindex="-1" role="dialog" aria-labelledby="DeleteDetailsModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Delete Record</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            Are You Sure?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" @onclick="@(() => DeleteDetails(DeleteFileId))" class="btn btn-danger" data-dismiss="modal">Delete</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>
+    }}
+
+
+@code {
+
+    public bool hide1 { get; set; } = false;
+    public bool hide2 { get; set; } = false;
+    public int DeleteFileId { get; set; }
+    private bool isSuccess = true;
+
+
+
+    private IList<UserProfileModel> Model;
+    private UserProfileModel Model1 = new UserProfileModel();
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model = await _userrepo.Get(Endpoints.UserProfileEndpoint);
+        Model = Model.Where(x => x.Active == true).ToList();
+        await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#example");
+
+    }
+
+    private void ConfirmDeleteId(int Deleteid)
+    {
+        DeleteFileId = Deleteid;
+    }
+
+    private async Task DeleteDetails(int Uid)
+    {
+        //Model1.TrackingHistoryId = Tid;
+        isSuccess = await _userrepo.Delete(Endpoints.UserProfileEndpoint, Uid);
+        if (isSuccess)
+        {
+            _toastService.ShowError("User Deleted Successfully", "Delete");
+        }
+        Model = await _userrepo.Get(Endpoints.UserProfileEndpoint);
+        Model = Model.Where(x => x.Active).ToList();
+    }
+
+    private async Task Search()
+    {
+        Model = await _userrepo.Get(Endpoints.UserProfileEndpoint);
+
+        Model = Model.ToList();
+        if (Model1.Active == true)
+        {
+            hide1 = true;
+            hide2 = true;
+            Model = Model.Where(x => x.Active == false).ToList();
+        }
+        else
+        {
+            Model = Model.Where(x => x.Active == false).ToList();
+        }
+    }
+}

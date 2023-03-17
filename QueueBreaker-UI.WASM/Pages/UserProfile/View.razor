@@ -1,0 +1,93 @@
+﻿@page "/userprofile/view/{Id}"
+@inject IUserProfileRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+
+<h3 class="card-title">View UserProfile Details</h3>
+<hr />
+<br />
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+<ErrorMessage Message="Invalid Selection. Please Try Again" /> }
+else if (Model == null)
+{
+<LoadingMessage Message="Loading UserProfile Details" /> }
+else
+{
+<div class="col-md-4">
+    <table class="table table-responsive">
+        <tr>
+            <td>UserName</td>
+            <td>@Model.UserName</td>
+        </tr>
+        <tr>
+            <td>Address 1</td>
+            <td>@Model.Address1</td>
+        </tr>
+        <tr>
+            <td>Address 2</td>
+            <td>@Model.Address2</td>
+        </tr>
+        <tr>
+            <td>City</td>
+            <td>@Model.City</td>
+        </tr>
+        <tr>
+            <td>State</td>
+            <td>@Model.State</td>
+        </tr>
+        <tr>
+            <td>Country</td>
+            <td>@Model.Country</td>
+        </tr>
+        <tr>
+            <td>Mobile</td>
+            <td>@Model.Mobile</td>
+        </tr>
+    </table>
+    <br />
+</div>}
+<br />
+
+
+<button @onclick="GoToEdit" class="btn btn-outline-warning">
+    <span class="oi oi-pencil"></span>
+    Edit UserProfile
+</button>
+@*<button @onclick="GoToDelete" class="btn btn-outline-danger">
+    <span class="oi oi-circle-x"></span>
+    Delete Author
+</button>*@
+<button @onclick="BackToList" class="btn btn-outline-secondary">
+    <span class="oi oi-media-skip-backward"></span>
+    Back To List
+</button>
+
+@code { [Parameter]
+        public string Id { get; set; }
+
+    private UserProfileModel Model = new UserProfileModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.UserProfileEndpoint, id);
+        _toastService.ShowInfo($"Now Viewing {Model.UserName}", "");
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/userprofile/");
+    }
+
+    private void GoToEdit()
+    {
+        _navManager.NavigateTo($"/userprofile/edit/{Model.ProfileId}");
+    }
+
+    //private void GoToDelete()
+    //{
+    //    _navManager.NavigateTo($"/authors/delete/{Model.Id}");
+    //} 
+}
+

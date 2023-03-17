@@ -1,0 +1,139 @@
+﻿@page "/order/view/{Id}"
+@inject IOrderRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+
+<h3 class="card-title">View Order Details</h3>
+<hr />
+<br />
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+    <ErrorMessage Message="Invalid Selection. Please Try Again" />
+}
+else if (Model == null)
+{
+    <LoadingMessage Message="Loading Item Details" />
+}
+else
+{
+<div class="col-md-4">
+   
+    <br />
+
+    @*@if (Model.OrderItems == null || Model.OrderItems.Count < 1)*@
+        @if (Model != null && Model.OrderItems.Count() < 0)
+        {
+            <div class="alert alert-dismissible alert-secondary">
+                No item for this Order
+            </div>
+        }
+        else
+        {
+<div class="card" >
+    <table class="table table-responsive">
+        <thead>
+            <tr class="card-header">
+                <th style="width: 250px;">Item</th>
+                <th style="width: 250px;">QTY</th>
+                <th style="width: 250px;">Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in Model.OrderItems)
+            {
+            <tr>
+                <td>
+                    @m.Item.Name
+                </td>
+                <td>@m.Quantity</td>
+                <td>@m.ItemPrice</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+    
+</div>
+
+        }
+
+</div>
+
+<EditForm Model="Model" OnValidSubmit="EditOrderItem">
+    <div class="form-group">
+        <label for="name">Review</label>
+        <InputText @bind-Value="Model.Review" class="form-control" id="Review" />
+    </div>
+    <button class="btn btn-primary" type="submit">
+        <span class="oi oi-pencil"></span>
+        Review
+    </button>
+</EditForm>
+}
+<br />
+
+
+@*<button @onclick="GoToEdit" class="btn btn-outline-warning">
+    <span class="oi oi-pencil"></span>
+    Update Order Status
+</button>*@
+@*<button @onclick="GoToDelete" class="btn btn-outline-danger">
+        <span class="oi oi-circle-x"></span>
+        Delete Item
+    </button>*@
+<button @onclick="BackToList" class="btn btn-outline-secondary">
+    <span class="oi oi-media-skip-backward"></span>
+    Back To List
+</button>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    private bool isSuccess = true;
+    private Order Model = new Order();
+
+    protected override async Task OnInitializedAsync()
+    {
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.OrderplaceEndpoint, id);
+
+        // _toastService.ShowInfo($"Now Viewing {Model.OrderItems}", "");
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/order/");
+    }
+    private async Task EditOrderItem()
+    {
+        Order reviewOrder = new Order();
+        reviewOrder.Id = Model.Id;
+        reviewOrder.UserId = Model.UserId;
+        reviewOrder.CanteenId = Model.CanteenId;
+        reviewOrder.OrderDate = Model.OrderDate;
+
+        reviewOrder.Status = Model.Status;
+        reviewOrder.CreatedId = Model.CreatedId;
+
+        reviewOrder.CreatedDate = Model.CreatedDate;
+        reviewOrder.ModifiedId = Model.ModifiedId;
+        reviewOrder.ModifyDate = Model.ModifyDate;
+        reviewOrder.Review = Model.Review;
+        isSuccess = await _repo.Update(Endpoints.OrderplaceEndpoint, reviewOrder, Model.Id);
+        if (isSuccess)
+        {
+            _toastService.ShowSuccess("Review Successfully", "Review");
+            BackToList();
+        }
+
+    }
+    private void GoToEdit()
+    {
+        _navManager.NavigateTo($"/order/edit/{Model.Id}");
+    }
+
+    private void GoToDelete()
+    {
+        _navManager.NavigateTo($"/order/delete/{Model.Id}");
+    }
+
+}

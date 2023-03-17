@@ -1,0 +1,228 @@
+﻿@page "/dashboard"
+
+Welcome To Queue Breaker
+
+@*<div class="row">
+    <div class="col-md-6">
+        <ChartJsPieChart @ref="_pieChartJs" Config="@_config" Width="600" Height="550" />
+    </div>
+    <div class="col-md-6">
+            <ChartJsBarChart @ref="barChartJs" Config="@config" Width="600" Height="550" />
+        </div>
+</div>
+
+
+@code {
+    private IList<MailBoxAllotmentModel> Model;
+    private IList<TrackingHistoryModel> trackmodel;
+    private TrackingHistoryModel tmodel = new TrackingHistoryModel();
+    private IList<MailBoxModel> Modelbox;
+    private PieConfig _config;
+    private ChartJsPieChart _pieChartJs;
+
+    private BarConfig config;
+    private ChartJsBarChart barChartJs;
+    public DateTime dtFrom { get; set; }
+    public DateTime dtTo { get; set; }
+    public DateTime date { get; set; }
+    public DateTime dt2From { get; set; }
+    public DateTime month { get; set; }
+    public DateTime month1 { get; set; }
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        _config = new PieConfig
+        {
+            Options = new PieOptions
+            {
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "MailBox"
+                },
+                Responsive = true,
+                Animation = new ArcAnimation
+                {
+                    AnimateRotate = true,
+                    AnimateScale = true
+                }
+            }
+        };
+
+        config = new BarConfig
+        {
+            Options = new BarOptions
+            {
+                Legend = new Legend
+                {
+                    Display = false
+                },
+
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Tracking History"
+                },
+
+                Responsive = true,
+                Animation = new Animation(),
+
+                MaintainAspectRatio = false,
+
+                Tooltips = new Tooltips
+                {
+                    Enabled = true,
+
+                    Mode = InteractionMode.Index,
+
+                    Intersect = false,
+
+                    BorderWidth = 1,
+
+                    BorderColor = "rgba(0, 0, 0, 0.12)",
+
+                    BackgroundColor = "#ffffff",
+
+                    TitleFontColor = "rgba(0, 0, 0, 0.87)",
+
+                    BodyFontColor = "rgba(0, 0, 0, 0.54)",
+
+                    FooterFontColor = "rgba(0, 0, 0, 0.54)"
+                },
+
+                Scales = new BarScales
+                {
+                    XAxes = new List<CartesianAxis>
+                {
+                            new BarCategoryAxis
+                            {
+                                BarThickness = 40,
+
+                                MaxBarThickness = 40,
+
+                                BarPercentage = 0.5,
+
+                                CategoryPercentage= 0.5,
+
+                                // Ticks = new CategoryTicks
+                                // {
+                                //     FontColor = "rgba(0, 0, 0, 0.54)"
+                                // },
+
+                                GridLines = new GridLines
+                                {
+                                    Display = false,
+
+                                    DrawBorder = true,
+
+                                    OffsetGridLines = true
+                                },
+
+                                Offset = true,
+
+                                OffsetGridLines = true
+                            }
+                        },
+
+                    YAxes = new List<CartesianAxis>
+                {
+                            new BarLinearCartesianAxis
+                            {
+                                BarThickness = 20,
+
+                                MaxBarThickness = 20,
+
+                                BarPercentage = 0.5,
+
+                                CategoryPercentage= 0.5,
+
+                                Ticks = new LinearCartesianTicks {
+                                    BeginAtZero = true,
+
+                                    Min = 0
+
+                                    // FontColor = "rgba(0, 0, 0, 0.54)"
+                                },
+
+                                GridLines = new GridLines
+                                {
+                                    BorderDash = new double [] { 2 },
+
+                                    DrawBorder = true,
+
+                                    Color = "rgba(0, 0, 0, 0.12)",
+
+                                    ZeroLineBorderDash = new int [] { 2 },
+
+                                    ZeroLineBorderDashOffset = 2,
+
+                                    ZeroLineColor = "rgba(0, 0, 0, 0.12)"
+                                }
+                            }
+                        }
+                }
+            }
+        };
+
+        _config.Data.Labels.AddRange(new[] { "Allotted", "UnAlloted" });
+        config.Data.Labels.AddRange(new[] { "Last Month", "Current Month", "This Year" });
+
+
+        var pieSet = new PieDataset
+        {
+            BackgroundColor = new[] { ColorUtil.ColorString(255, 99, 71, 0.8), ColorUtil.ColorString(25, 250, 100, 0.8) },
+            BorderWidth = 0,
+            HoverBackgroundColor = ColorUtil.ColorString(255, 220, 0, 0.8),
+            HoverBorderColor = ColorUtil.ColorString(255, 220, 0, 0.8),
+            HoverBorderWidth = 1,
+            BorderColor = "#ffffff",
+        };
+
+        var barSet1 = new BarDataset<DoubleWrapper>
+        {
+            Label = "Tracking History",
+
+            BackgroundColor = new[] { ColorUtil.ColorString(100, 200, 200, 0.8), ColorUtil.ColorString(25, 150, 100, 0.8), ColorUtil.ColorString(100, 200, 200, 0.8) }
+        };
+
+        var a  = await _mailrepo.Get(Endpoints.MailBoxEndpoint);
+        var b = await _repo.Get(Endpoints.MailBoxAllotmentEndpoint);
+        var allot = b.Count();
+        var totalmailbox = a.Count();
+        var unallot = totalmailbox - allot;
+
+        pieSet.Data.AddRange(new double[] { allot, unallot, });
+        _config.Data.Datasets.Add(pieSet);
+
+        var track = await _trackrepo.Get(Endpoints.TrackingHistoryEndpoint);
+        var tracklist = track.ToList();
+
+        //----------------------------------------------------------//
+
+        //-- Current Month
+        dtFrom = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+        dtTo = date.AddHours(23).AddMinutes(59).AddSeconds(59);
+        var curentmonth = tracklist.Where(x => x.CreatedDate >= dtFrom && x.CreatedDate <= dtTo).ToList();
+
+        //-- Last Month
+         month = dtFrom.AddMonths(-1);
+         month1 = dtFrom.AddDays(-1).AddHours(23).AddMinutes(59).AddSeconds(59);
+        var lastmonth = tracklist.Where(x => x.CreatedDate >= month && x.CreatedDate <= month1).ToList();
+
+
+        //-- Year
+        dt2From = new DateTime(DateTime.Now.Year, 1, 1);
+        var thisyear = tracklist.Where(x => x.CreatedDate >= dt2From && x.CreatedDate <= dtTo).ToList();
+
+        //----------------------------------------------------------//
+
+        var cm = curentmonth.Count();
+        var lm = lastmonth.Count();
+        var ty = thisyear.Count();
+
+        barSet1.AddRange(new DoubleWrapper[] { lm, cm, ty });
+        config.Data.Datasets.AddRange(new[] { barSet1 });
+    }
+}*@

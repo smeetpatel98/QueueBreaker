@@ -1,0 +1,128 @@
+﻿@page "/tracking/editdetails/{Id}"
+@*@attribute [Authorize(Roles = "Administrator")]*@
+
+@inject ITrackingHistoryRepository _repo
+@inject ITrackingHeaderRepository _headrepo
+@inject IMailBoxRepository _mailrepo
+@inject IMailBoxAuthoritiesRepository _authrepo
+@inject IMailBoxAllotmentRepository _allotrepo
+@inject IToastService _toastService
+@inject NavigationManager _navManager
+@*<div class="row">*@
+@*<div class="col-md-3"></div>*@
+@*<div class="col-md-12">*@
+<div class="card">
+    <br />
+    <h3 class="card-title text-center">Edit Tracking Details</h3>
+    <hr />
+    <br />
+    @if (!isSuccess)
+    {
+        <ErrorMessage Message="Somewthing Went Wrong With the Operation" />}
+
+    @if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+    {
+        <ErrorMessage Message="Invalid Selection. Please Try Again" /> }
+    else if (Model == null)
+    {
+        <LoadingMessage Message="Loading MailBox Authorities For Edit" /> }
+    else
+    {
+<div class="card-body">
+    <EditForm Model="Model" OnValidSubmit="EditTrackingDetails">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <h3 class="card-title">Tracking Details</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <div>
+                    <label for="DeliveyDate">Delivery Date</label>
+                    <InputDate @bind-Value="Model.DeliveryDate" class="form-control" id="DeliveryDate" disabled />
+                </div>
+                <div>
+                    <label for="ItemBarCode">Item Barcode</label>
+                    <InputText @bind-Value="Model.ItemBarCode" class="form-control" id="ItemBarCode" />
+                </div>
+                <div>
+                    <label>Package Type</label>
+                    <select @bind="Model.PackageType" class="form-control" id="author">
+                        <option value="">@ConstantRepository.SelectOption</option>
+                        @if (packages != null)
+                        {
+                            foreach (var package in packages)
+                            {
+                                <option value="@package.Value">@package.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <br />
+                <button class="btn btn-primary" type="submit">
+                    <span class="oi oi-pencil"></span>
+                    Submit Changes
+                </button>
+                <button @onclick="BackToList" class="btn btn-secondary">
+                    <span class="oi oi-media-skip-backward"></span>
+                    Back To List
+                </button>
+            </div>
+        </div>
+    </EditForm>
+</div>}
+</div>
+@*</div>*@
+@*</div>*@
+<style>
+    .custom {
+        width: 4% !important;
+    }
+</style>
+
+@code { [Parameter]
+    public string Id { get; set; }
+    public int id { get; set; }
+    public bool sig { get; set; } = false;
+    public bool sign { get; set; } = false;
+    public bool form { get; set; } = true;
+    public string pmb { get; set; }
+    public string contactname { get; set; }
+    public int mailId { get; set; }
+    public int authId { get; set; }
+    public string url { get; set; }
+    public List<AuthAllotUser> users { get; set; }
+
+    private TrackingHistoryModel Model = new TrackingHistoryModel();
+    private bool isSuccess = true;
+    private IList<KeyValues> statuses;
+    private IList<KeyValues> packages;
+    private IList<MailBoxModel> mailboxes;
+    private IList<MailBoxAuthoritiesModel> authorities;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        statuses = await _repo.GetEnums(Endpoints.StatusEndpoint);
+        packages = await _repo.GetEnums(Endpoints.PackageTypeEndpoint);
+        mailboxes = await _mailrepo.Get(Endpoints.MailBoxEndpoint);
+        authorities = await _authrepo.Get(Endpoints.MailBoxAuthoritiesEndpoint);
+        authorities = authorities.GroupBy(x => x.ContactName).Select(x => x.FirstOrDefault()).ToList(); int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.TrackingHistoryEndpoint, id);
+    }
+
+    private async Task EditTrackingDetails()
+    {
+        isSuccess = await _repo.Update(Endpoints.TrackingHistoryEndpoint, Model,Model.TrackingHistoryId);
+        if (isSuccess)
+        {
+            _toastService.ShowWarning("Tracking Details Updated Successfully", "Update");
+            BackToList();
+        }
+
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo($"/tracking/edit/{Model.TrackingHeaderId}");
+    } }
+
+

@@ -1,0 +1,248 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RazorLangVersion>3.0</RazorLangVersion>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Pages\TrackingHistory\**" />
+    <Compile Remove="Pages\Tracking\**" />
+    <Compile Remove="Pages\UserProfile\**" />
+    <Content Remove="Pages\TrackingHistory\**" />
+    <Content Remove="Pages\Tracking\**" />
+    <Content Remove="Pages\UserProfile\**" />
+    <EmbeddedResource Remove="Pages\TrackingHistory\**" />
+    <EmbeddedResource Remove="Pages\Tracking\**" />
+    <EmbeddedResource Remove="Pages\UserProfile\**" />
+    <None Remove="Pages\TrackingHistory\**" />
+    <None Remove="Pages\Tracking\**" />
+    <None Remove="Pages\UserProfile\**" />
+    <Content Remove="Pages\CurrentUser\UpdatePassword.razor" />
+    <Content Remove="Pages\Menu\MyShopingCart.razor" />
+    <Content Remove="Pages\Review\Index.razor" />
+    <None Remove="Pages\CurrentUser\Edit.razor" />
+    <None Remove="Pages\CurrentUser\Index.razor" />
+    <Content Remove="Pages\CurrentUser\Edit.razor" />
+    <Content Remove="Pages\CurrentUser\Index.razor" />
+    <Compile Remove="Service\AuthorRepository %28copy%29.cs" />
+    <Content Remove="Pages\Canteen1\Create.razor" />
+    <Content Remove="Pages\Canteen1\Edit.razor" />
+    <Content Remove="Pages\Canteen1\Index.razor" />
+    <Content Remove="Pages\Canteen1\View.razor" />
+    <Content Remove="Pages\Canteen1\Delete.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Pages\MailBox\TrackingList.razor" />
+    <Content Remove="Pages\TrackingList\Delete.razor" />
+    <Content Remove="Pages\TrackingList\Edit.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazored.LocalStorage" Version="3.0.0" />
+    <PackageReference Include="Blazored.Toast" Version="3.1.2" />
+    <PackageReference Include="BlazorInputFile" Version="0.2.0" />
+    <PackageReference Include="ChartJs.Blazor" Version="1.1.0" />
+    <PackageReference Include="iTextSharp.LGPLv2.Core" Version="1.7.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="3.1.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="3.2.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
+    <PackageReference Include="Mobsites.Blazor.SignaturePad" Version="1.1.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="System.Net.Http.Json" Version="3.2.0" />
+    <PackageReference Include="Twilio" Version="5.59.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Pages\Index.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <Content Update="Shared\MainLayout.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <Content Update="Shared\NavMenu.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <Content Update="Shared\SurveyPrompt.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Authors\Create.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Authors\Create.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Authors\Create.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Authors\Delete.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Authors\Edit.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Authors\Index.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Authors\View.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Books\Create.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Books\Delete.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Books\Edit.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Books\Index.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Books\View.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Error.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Users\Login.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Users\Logout.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Users\Register.razor" />
+    <_ContentIncludedByDefault Remove="Shared\ErrorMessage.razor" />
+    <_ContentIncludedByDefault Remove="Shared\LoadingMessage.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Authors\Delete.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Authors\Delete.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Authors\Edit.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Authors\Edit.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Authors\Index.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Authors\Index.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Authors\View.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Authors\View.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Books\Create.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Books\Create.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Books\Delete.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Books\Delete.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Books\Edit.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Books\Edit.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Books\Index.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Books\Index.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Books\View.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Books\View.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Users\Login.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Users\Login.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Users\Logout.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Users\Logout.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Users\Register.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Users\Register.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Pages\Error.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Error.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Shared\ErrorMessage.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Shared\ErrorMessage.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Shared\LoadingMessage.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Shared\LoadingMessage.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="image\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Pages\Order\Delete.razor" />
+    <None Include="Pages\Order\Index.razor" />
+    <None Include="Pages\Order\View.razor" />
+    <None Include="Pages\Item\Create.razor" />
+    <None Include="Pages\Item\Delete.razor" />
+    <None Include="Pages\Item\Edit.razor" />
+    <None Include="Pages\Item\Index.razor" />
+    <None Include="Pages\Item\View.razor" />
+    <None Include="Pages\Review\Index.razor" />
+  </ItemGroup>
+</Project>

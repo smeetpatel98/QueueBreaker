@@ -1,0 +1,205 @@
+﻿@page "/tracking/"
+
+@inject  ITrackingHistoryRepository _repo
+@*@inject HttpClient _client*@
+<h3 class="card-title">List</h3>
+<hr />
+<br />
+@if (Model == null)
+{
+<LoadingMessage Message="Loading Tracking" /> }
+            else
+            {
+<a href="/tracking/create" class="btn btn-primary">
+    <span class="oi oi-plus"></span>
+    Create New Tracking
+</a>
+<br />
+<br />
+@if (Model.Count < 1)
+{
+<LoadingMessage Message="There are no Tracking in the data store.
+                        Click 'Create Tracking' to Begin " /> }
+ else
+ {
+<EditForm Model="Model1">
+    <div class="row">
+        <div class="col-md-4">
+            <div>
+                <label for="DestinationPmb">DestinationPmb</label>
+                <InputText @bind-Value="Model1.DestinationPmb" class="form-control" id="DestinationPmb" />
+            </div>
+            <div>
+                <label>Status</label>
+                <select @bind="Model1.Status" class="form-control" id="author">
+                    <option value="">-- Select Status --</option>
+                    @if (statuses != null)
+                    {
+                        foreach (var status in statuses)
+                        {
+                            <option value="@status.Value">@status.Text</option>
+}
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div>
+                <label for="DispatchDate">Dispatch Date</label>
+                <InputDate @bind-Value="Model1.DispatchDate" class="form-control" id="DispatchDate" />
+            </div>
+            <div>
+                <label for="DeliveyDate">Delivery Date</label>
+                <InputDate @bind-Value="Model1.DeliveryDate" class="form-control" id="DeliveryDate" />
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-1">
+            <div>
+                <label for="Active">Active</label>
+                <InputCheckbox @bind-Value="Model1.Active" id="Active" />
+            </div>
+        </div>
+        <div>
+            <label for="InActive">InActive</label>
+            <InputCheckbox @bind-Value="Model1.InActive" id="InActive" />
+        </div>
+    </div>
+    <br/>
+    <button @onclick="Search" class="btn btn-primary" type="submit">
+        <span class="oi oi-pencil"></span>
+        Search
+    </button>
+</EditForm>
+<br/>
+<table class="table table-responsive">
+    <thead>
+        <tr>
+            <th style="width:1%">Customer Name</th>
+            <th>Item Name</th>
+            @*<th style="width:1%">Item Destination</th>*@
+            <th style="width:1%">Item Barcode</th>
+            <th style="width:1%">Qty</th>
+            <th style="width:1%">Destiantion Pmb</th>
+            <th>Dispatch Date</th>
+            <th>Delivery Date</th>
+            <th>Package</th>
+            <th>Status</th>
+            <th>Active</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var trackinghistory in Model)
+        {
+        <tr>
+            <td>@trackinghistory.CustomerName</td>
+            <td>@trackinghistory.ItemName</td>
+            @*<td>@trackinghistory.ItemDestination</td>*@
+            <td>@trackinghistory.ItemBarCode</td>
+            <td>@trackinghistory.Quantity</td>
+            <td>@trackinghistory.DestinationPmb</td>
+            <td>@string.Format("{0:MM-dd-yyyy}", trackinghistory.DispatchDate)</td>
+            <td>@string.Format("{0:MM-dd-yyyy}", trackinghistory.DeliveryDate)</td>
+            <td>
+                @{
+                    var pa = trackinghistory.PackageType.ToString();
+                    var p = packages.Where(x => x.Value == pa).Select(x => x.Text).FirstOrDefault();
+                    @p
+                }
+            </td>
+            <td>
+                @{
+                    var st = trackinghistory.Status.ToString();
+                    var s = statuses.Where(x => x.Value == st).Select(x => x.Text).FirstOrDefault();
+                    @s
+                }
+            </td>
+            <td>
+                @if (trackinghistory.Active == true)
+                {<text>Yes</text> }
+            else
+            {
+                <text>No</text>
+            }
+            </td>
+        <td>
+                @*<a class="btn btn-primary" href="/trackinghistory/view/@trackinghistory.TrackingHistoryId">
+                    <span class="oi oi-book"></span>
+                </a>*@
+                <a class="btn btn-warning" href="/tracking/edit/@trackinghistory.TrackingHistoryId">
+                    <span class="oi oi-pencil"></span>
+                </a>
+                <a class="btn btn-danger" href="/tracking/delete/@trackinghistory.TrackingHistoryId">
+                    <span class="oi oi-delete"></span>
+                </a>
+            </td>
+        </tr>}
+    </tbody>
+</table>}}
+
+<style>
+    .custom {
+        width: 4% !important;
+    }
+</style>
+
+@code { private IList<TrackingHistoryModel> Model;
+    private TrackingHistoryModel Model1 = new TrackingHistoryModel();
+    private IList<KeyValues> statuses;
+    private IList<KeyValues> packages;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        //Model1.DeliveryDate = DateTime.Now;
+        //Model1.DispatchDate = DateTime.Now;
+        statuses = await _repo.GetEnums(Endpoints.StatusEndpoint);
+        packages = await _repo.GetEnums(Endpoints.PackageTypeEndpoint);
+        Model = await _repo.Get(Endpoints.TrackingHistoryEndpoint);
+        //Model = await _client.GetFromJsonAsync<IList<Author>>(Endpoints.AuthorsEndpoint);
+    }
+
+    private async Task Search()
+    {
+        Model = await _repo.Get(Endpoints.TrackingHistoryEndpoint);
+
+        Model = Model.ToList();
+
+        if (Model1.Active == true && Model1.InActive == true)
+        {
+            Model = Model.ToList();
+        }
+        else if (Model1.Active == true)
+        {
+            Model = Model.Where(x => x.Active == true).ToList();
+
+        }
+        else if (Model1.InActive == true)
+        {
+            Model = Model.Where(x => x.Active == false).ToList();
+        }
+        if (!string.IsNullOrEmpty(Model1.DestinationPmb))
+        {
+            Model = Model.Where(x => x.DestinationPmb == Model1.DestinationPmb).ToList();
+        }
+        if (Model1.DispatchDate != null)
+        {
+            Model = Model.Where(x => x.DispatchDate == Model1.DispatchDate).ToList();
+        }
+        if (Model1.DeliveryDate != null)
+        {
+            Model = Model.Where(x => x.DeliveryDate == Model1.DeliveryDate).ToList();
+        }
+        if (Model1.Status != 0)
+        {
+            Model = Model.Where(x => x.Status == Model1.Status).ToList();
+        }
+
+        //sModel = Model.Where(x => x.DestinationPmb == Model1.DestinationPmb || x.DeliveryDate == Model1.DeliveryDate || x.DispatchDate == Model1.DispatchDate || x.Status == Model1.Status).ToList();
+
+    }
+
+    }

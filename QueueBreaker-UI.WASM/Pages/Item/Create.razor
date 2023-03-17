@@ -1,0 +1,142 @@
+﻿@page "/item/create/"
+@attribute [Authorize(Roles = "Admin")]
+
+@inject IItemRepository _repo
+@inject ICategoryRepository _authorRepo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+
+
+<h3 class="card-title">Create New Item</h3>
+<hr />
+<br />
+@if (!isSuccess)
+{
+    <ErrorMessage Message="Something Went Wrong With the Operation" />
+}
+
+
+<EditForm Model="Model" OnValidSubmit="CreateItem">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="name">Name</label>
+        <InputText @bind-Value="Model.Name" class="form-control" id="name" />
+    </div>
+    <div class="form-group">
+        <label for="author">Categoryc</label>
+        <select @bind="Model.CategoryId" class="form-control" id="category">
+            <option value="">-- Select Category --</option>
+            @if (Categorys != null)
+            {
+                foreach (var c in Categorys
+                    )
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="name">Price</label>
+        <InputNumber @bind-Value="Model.Price" class="form-control" id="name" />
+    </div>
+    <div class="form-group">
+        <label for="bookcover">Photo</label>
+        <InputFile OnChange="HandleFileSelection" />
+        @if (isInvalidFileType)
+        {
+            <ErrorMessage Message="Please remove the invalid file type and select as new image, or leave this field blank" />
+        }
+        @if (!string.IsNullOrWhiteSpace(imageDataURL))
+        {
+            <img src="@imageDataURL" style="height:100px;width:100px" />
+        }
+    </div>
+    <div class="form-group">
+        <label for="name">Comment</label>
+        <InputTextArea @bind-Value="Model.Comment" class="form-control" id="Comment" />
+    </div>
+    <div>
+        <label for="Active">Active</label>
+        <InputCheckbox @bind-Value="Model.Status" class="form-control custom-checkbox" id="status" />
+    </div>
+    <br />
+    <button class="btn btn-primary" type="submit">
+        <span class="oi oi-pencil"></span>
+        Create Item
+    </button>
+    <button @onclick="BackToList" class="btn btn-outline-secondary">
+        <span class="oi oi-media-skip-backward"></span>
+        Back To List
+    </button>
+</EditForm>
+
+@code{
+    private Item Model = new Item();
+    private bool isSuccess = true;
+    private IList<Category> Categorys;
+    private IFileListEntry file;
+    private bool isInvalidFileType = false;
+    private string imageDataURL;
+    private MemoryStream msFile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categorys = await _authorRepo.Get(Endpoints.CategoryEndpoint);
+    }
+    private async Task CreateItem()
+    {
+        if (!isInvalidFileType)
+        {
+            if (file != null)
+            {
+                var ext = Path.GetExtension(file.Name);
+                var picId = Guid.NewGuid().ToString().Replace("-", "");
+                var picName = $"{picId}{ext}";
+
+                Model.Image = picName;
+                Model.ImageFile = Convert.ToBase64String(msFile.ToArray());
+            }
+
+            isSuccess = await _repo.Create(Endpoints.ItemEndpoint, Model);
+            if (isSuccess)
+            {
+                _toastService.ShowSuccess("Item Created Successfully", "");
+                BackToList();
+            }
+        }
+    }
+    private async Task HandleFileSelection(IFileListEntry[] files)
+    {
+        file = files.FirstOrDefault();
+        if (file != null)
+        {
+            var ext = Path.GetExtension(file.Name);
+            if (ext.Contains("jpg") || ext.Contains("png") || ext.Contains("jpeg"))
+            {
+                msFile = new MemoryStream();
+                await file.Data.CopyToAsync(msFile);
+
+                var reader = new StreamReader(file.Data);
+                var imageBase64Data = Convert.ToBase64String(msFile.ToArray());
+                imageDataURL = string.Format("data:image/png;base64,{0}", imageBase64Data);
+                isInvalidFileType = false;
+            }
+            else
+            {
+                isInvalidFileType = true;
+                imageDataURL = string.Empty;
+            }
+        }
+        else
+        {
+            isInvalidFileType = false;
+        }
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/item/");
+    }
+}

@@ -1,0 +1,76 @@
+﻿@page "/userprofile/"
+
+@inject IUserProfileRepository _repo
+@*@inject HttpClient _client*@
+<h3 class="card-title">Index</h3>
+<hr />
+<br />
+@if (Model == null)
+{
+<LoadingMessage Message="Loading UserProfile" />
+ }
+else
+{ @*<a href="/userprofile/create" class="btn btn-primary">
+        <span class="oi oi-plus"></span>
+        Create New
+    </a>*@
+                <br />
+
+                                @if (Model.Count < 1)
+                                {
+                <LoadingMessage Message="There are no MailBox in the data store.
+                        Click 'Create MailBox' to Begin " />
+ }
+            else
+            {
+    <table class="table table-responsive">
+        <thead>
+            <tr>
+                <th>UserName</th>
+                <th>Address 1</th>
+                <th>Address 2</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Country</th>
+                <th>Mobile</th>
+                <th>Active</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var profile in Model)
+            {
+<tr>
+    <td>@profile.UserName</td>
+    <td>@profile.Address1</td>
+    <td>@profile.Address2</td>
+    <td>@profile.City</td>
+    <td>@profile.State</td>
+    <td>@profile.Country</td>
+    <td>@profile.Mobile</td>
+    <td>@profile.Active</td>
+    <td>
+        <a href="/userprofile/view/@profile.ProfileId" class="btn btn-primary">
+            <span class="oi oi-book"></span>
+        </a>
+            <a href="/userprofile/edit/@profile.ProfileId" class="btn btn-warning">
+                <span class="oi oi-pencil"></span>
+            </a>
+            @*<a href="/authors/delete/@author.Id" class="btn btn-danger">
+                    <span class="oi oi-delete"></span>
+                </a>*@
+    </td>
+</tr>
+}
+        </tbody>
+    </table>
+}}
+
+@code { private IList<UserProfileModel> Model;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model = await _repo.Get(Endpoints.UserProfileEndpoint);
+        //Model = await _client.GetFromJsonAsync<IList<Author>>(Endpoints.AuthorsEndpoint);
+    } }
+

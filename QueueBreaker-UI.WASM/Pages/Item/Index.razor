@@ -1,0 +1,89 @@
+﻿@page "/item/"
+
+@inject IItemRepository _repo
+@inject ICategoryRepository _authorRepo
+
+@*@inject HttpClient _client*@
+
+@*<div class="form-group">
+    <label for="author">Canteens</label>
+    <select class="form-control" id="canteen" onchange="DoStuff">
+        <option value="">-- Select Canteens --</option>
+        @if (Canteens != null)
+        {
+            foreach (var c in Canteens)
+            {
+                <option value="@c.Id">@c.Name</option>
+            }
+        }
+    </select>
+</div>*@
+<h3 class="card-title">Item</h3>
+<hr />
+<br />
+@if (Model == null)
+{
+    <LoadingMessage Message="Loading Item" />
+}
+else
+{
+    <AuthorizeView Roles="Admin">
+        <a href="/item/create" class="btn btn-primary">
+            <span class="oi oi-plus"></span>
+            Create New Item
+        </a>
+        <br />
+    </AuthorizeView>
+    @if (Model.Count < 1)
+    {
+        <LoadingMessage Message="There are no Item in the data store.
+                        Click 'Create Item to Begin " />
+    }
+    else
+    {
+
+        <table class="table table-responsive">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model)
+                {
+                    <tr>
+                        <td>@m.Name</td>
+                        <td>@m.Category.Name</td>
+                        <td>@m.Price</td>
+                        <td>
+                            <a href="/item/view/@m.Id" class="btn btn-primary">
+                                <span class="oi oi-book"></span>
+                            </a>
+                            <AuthorizeView Roles="Admin">
+                                <a href="/item/edit/@m.Id" class="btn btn-warning">
+                                    <span class="oi oi-pencil"></span>
+                                </a>
+                                <a href="/item/delete/@m.Id" class="btn btn-danger">
+                                    <span class="oi oi-delete"></span>
+                                </a>
+                            </AuthorizeView>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private IList<Item> Model;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model = await _repo.Get(Endpoints.ItemEndpoint);
+    
+    }
+   
+}

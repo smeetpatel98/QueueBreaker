@@ -1,0 +1,144 @@
+﻿@page "/tracking/create/"
+@*@attribute [Authorize(Roles = "Administrator")]*@
+
+@inject ITrackingHistoryRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+
+@*<div class="row">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">*@
+        <div class="card">
+            <br />
+            <h3 class="card-title text-center">Create New Tracking</h3>
+            <hr />
+            <br />
+            @if (!isSuccess)
+            {
+<ErrorMessage Message="Something Went Wrong With the Operation" />}
+
+            <div class="card-body">
+                <EditForm Model="Model" OnValidSubmit="CreateTrackingHistory">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div>
+                                <label for="CustomerName">Customer Name</label>
+                                <InputText @bind-Value="Model.CustomerName" class="form-control" id="CustomerName" />
+                            </div>
+                            <div>
+                                <label for="ItemName">ItemName</label>
+                                <InputText @bind-Value="Model.ItemName" class="form-control" id="ItemName" />
+                            </div>
+                            <div>
+                                <label for="ItemDestination">Item Destination</label>
+                                <InputText @bind-Value="Model.ItemDestination" class="form-control" id="Pmbnumber" />
+                            </div>
+                            <div>
+                                <label for="ItemBarCode">Item Barcode</label>
+                                <InputText @bind-Value="Model.ItemBarCode" class="form-control" id="ItemBarCode" />
+                            </div>
+                            <div>
+                                <label for="Quantity">Quantity</label>
+                                <InputNumber @bind-Value="Model.Quantity" class="form-control" id="Quantity" />
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="col-md-6">
+                            <div>
+                                <label for="DestinationPmb">DestinationPmb</label>
+                                <InputText @bind-Value="Model.DestinationPmb" class="form-control" id="DestinationPmb" />
+                            </div>
+                            <div>
+                                <label for="DispatchDate">Dispatch Date</label>
+                                <InputDate @bind-Value="Model.DispatchDate" class="form-control" id="DispatchDate" />
+                            </div>
+                            <div>
+                                <label for="DeliveyDate">Delivery Date</label>
+                                <InputDate @bind-Value="Model.DeliveryDate" class="form-control" id="DeliveryDate" />
+                            </div>
+                            <div>
+                                <label>Package</label>
+                                <select @bind="Model.PackageType" class="form-control" id="author">
+                                    <option value="">-- Select PackageType --</option>
+                                    @if (statuses != null)
+                                    {
+                                        foreach (var package in packages)
+                                        {
+                                            <option value="@package.Value">@package.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label>Status</label>
+                                <select @bind="Model.Status" class="form-control" id="author">
+                                    <option value="">-- Select Status --</option>
+                                    @if (statuses != null)
+                                    {
+                                        foreach (var status in statuses)
+                                        {
+                                            <option value="@status.Value">@status.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label for="Active">Active</label>
+                                <InputCheckbox @bind-Value="Model.Active" class="form-control custom" id="Active" />
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <button class="btn btn-primary" type="submit">
+                        <span class="oi oi-pencil"></span>
+                        Create Tracking
+                    </button>
+                    <button @onclick="BackToList" class="btn btn-secondary">
+                        <span class="oi oi-media-skip-backward"></span>
+                        Back To List
+                    </button>
+
+                </EditForm>
+            </div>
+        </div>
+    @*</div>
+</div>*@
+
+<style>
+    .custom {
+        width: 4% !important;
+    }
+</style>
+
+@code{ private TrackingHistoryModel Model = new TrackingHistoryModel();
+    private bool isSuccess = true;
+    private IList<KeyValues> statuses;
+    private IList<KeyValues> packages;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Model.DispatchDate = DateTime.Now;
+        //Model.DeliveryDate = DateTime.Now;
+        statuses = await _repo.GetEnums(Endpoints.StatusEndpoint);
+        packages = await _repo.GetEnums(Endpoints.PackageTypeEndpoint);
+    }
+
+    private async Task CreateTrackingHistory()
+    {
+        isSuccess = await _repo.Create(Endpoints.TrackingHistoryEndpoint, Model);
+        if (isSuccess)
+        {
+            _toastService.ShowSuccess("TrackingHistory Created Successfully", "");
+            BackToList();
+        }
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/tracking/");
+    } }
+

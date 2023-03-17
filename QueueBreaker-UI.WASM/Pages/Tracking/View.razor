@@ -1,0 +1,85 @@
+﻿@page "/tracking/view/{Id}"
+
+@inject ITrackingHistoryRepository _repo
+@inject ITrackingHeaderRepository _headrepo
+@inject IToastService _toastService
+@inject NavigationManager _navManager
+
+<h3 class="card-title">MailBox Tracking Details</h3>
+<hr />
+<br />
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+    <ErrorMessage Message="Invalid Selection. Please Try Again" />
+}
+else if (Model == null)
+{
+    <LoadingMessage Message="Loading MailBox Authorities Details" />
+}
+else
+{
+    <div class="col-md-6">
+        <table class="table table-responsive">
+            <tr>
+                <td>Customer Name</td>
+                @*<td>@Model.MailBoxAuthorities.ContactName</td>*@
+            </tr>
+            <tr>
+                <td>Destiantion Pmb</td>
+                @*<td>@Model.MailBox.Pmbnumber</td>*@
+            </tr>
+            <tr>
+                <td>Delivery Date</td>
+                @*<td>@Model.DeliveryDate</td>*@
+            </tr>
+        </table>
+        <br />
+       
+    </div>}
+<br />
+
+
+<button @onclick="GoToEdit" class="btn btn-warning">
+    <span class="oi oi-pencil"></span>
+    Edit MailBox Authorities
+</button>
+<button @onclick="GoToDelete" class="btn btn-danger">
+    <span class="oi oi-circle-x"></span>
+    Delete MailBox Authorities
+</button>
+<button @onclick="BackToList" class="btn btn-secondary">
+    <span class="oi oi-media-skip-backward"></span>
+    Back To List
+</button>
+
+@code { [Parameter]
+    public string pmb { get; set; }
+    public string contactname { get; set; }
+    public string Id { get; set; }
+    private TrackingHeaderModel Model = new TrackingHeaderModel();
+
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    int id = Convert.ToInt32(Id);
+    //    Model = await _headrepo.Get(Endpoints.TrackingHeaderEndpoint, id);
+    //    pmb = Model.MailBox.Pmbnumber;
+    //    //pname = Model.Profile.UserName;
+    //    _toastService.ShowInfo($"Now Viewing {Model.MailBox.Pmbnumber}", "");
+    //}
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/tracking/");
+    }
+
+    private void GoToEdit()
+    {
+        _navManager.NavigateTo($"/tracking/edit/{Model.TrackingHeaderId}");
+    }
+
+    private void GoToDelete()
+    {
+        _navManager.NavigateTo($"/tracking/delete/{Model.TrackingHeaderId}");
+    } }
+
+

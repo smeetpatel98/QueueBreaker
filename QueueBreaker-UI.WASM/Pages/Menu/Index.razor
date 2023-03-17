@@ -1,0 +1,275 @@
+﻿@page "/menu/"
+    @using System.Threading;
+    @inject IItemRepository _Itemrepo
+
+    @inject ICanteenRepository _canteenRepo
+    @inject ICartRepository _Cartrepo
+    @inject NavigationManager _navManager
+    @inject IToastService _toastService
+    @inject AppState appState
+    @*@inject HttpClient _client*@
+    <h3 class="card-title">Menu</h3>
+    <hr />
+    <br />
+    @if (Canteens == null)
+    {
+        <LoadingMessage Message="Loading Canteens" />
+    }
+    else
+    {
+        <div class="form-group">
+            <label for="author">Canteens</label>
+
+            <select class="form-control" id="canteen" @onchange="DoStuff">
+                <option value="">-- Select Canteens --</option>
+                @if (Canteens != null)
+                {
+                    foreach (var c in Canteens)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        @if (itemsForCanteen == null)
+        {
+            <LoadingMessage Message="Loading Menu" />
+        }
+        else
+        {
+            @if (IsOpen)
+            {
+                <div tabindex="-1" style="display:block" role="dialog" class="modal">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <strong>An item was added to your cart.</strong>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" @onclick="onclick">Continue</button>
+                                <button type="button" class="btn btn-danger" @onclick="GoToCart">Check Out</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (itemsForCanteen.Count < 1)
+            {
+                <LoadingMessage Message="There are no Item in the Canteen. " />
+            }
+            else
+            {
+
+
+                @if (itemsForCanteen != null)
+                {
+                    <table class="table table-responsive">
+                        <tr>
+                            <th style="width: 250px;">
+                                Category
+                            </th>
+                            <th style="width: 250px;">
+                                Name
+                            </th>
+                            <th style="width: 250px;">
+                                Price
+                            </th>
+                            <th style="width: 250px;">
+                                Picture
+                            </th>
+                            <th style="width: 250px;"></th>
+                        </tr>
+                        @foreach (var item in itemsForCanteen)
+                        {
+                            <tr>
+                                <td>
+                                    @item.Category.Name
+                                </td>
+                                <td>
+                                    @item.Name
+                                </td>
+                                <td>
+                                    @item.Price.ToString("N2") ₹
+                                </td>
+                                <td>
+                                    @*<img src="@item.Image" width="150" />*@
+                                                                
+                                                                <img src="@string.Format("data:image/png;base64,{0}", item.ImageFile)" style="height:100px;width:100px" />
+                                                            </td>
+                                <td>
+                                    <a class="btn btn-primary" @onclick="(() => addToCart(item.Id))">
+                                        Add
+                                        to cart
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+
+            }
+        }
+
+    }
+    @code {
+
+        private bool isSuccess = true;
+        bool IsOpen { get; set; }
+        int? cartCount { get; set; }
+        int SelectedCanteenID = 0;
+        IList<Item> itemsMaster;
+        IList<Item> itemsForCanteen;
+        IList<Canteen> Canteens;
+        ShoppingCartRemoveViewModel model;
+        [CascadingParameter]
+        private Task<AuthenticationState> authenticationStateTask { get; set; }
+        void onclick()
+        {
+            IsOpen = !IsOpen;
+        }
+
+
+        protected override async Task OnInitializedAsync()
+        {
+            itemsMaster = await _Itemrepo.Get(Endpoints.ItemEndpoint);
+            // items = await shoppingCartService.getItems();
+            Canteens = await _canteenRepo.Get(Endpoints.CanteenEndpoint);
+
+        }
+
+        private async void DoStuff(ChangeEventArgs e)
+        {
+
+            itemsForCanteen = null;
+            var selected = Convert.ToInt32(e.Value.ToString());
+            itemsForCanteen = itemsMaster.Where(x => x.Category.CanteenId == selected).ToList();
+            SelectedCanteenID = selected;
+            await _Cartrepo.SetCenteenId(SelectedCanteenID);
+
+            await CleanCart();
+        }
+
+        protected async Task CleanCart()
+        {
+            // Remove all row from Cart for user and canteen id
+            var CanteenID = await _Cartrepo.GetCenteenId();
+            var UserID = await _Cartrepo.GetUserId();
+        }
+
+        protected async Task addToCart(int id)
+        {
+            // Retrieve the item from the database
+            var addedItem = await _Itemrepo.Get(Endpoints.ItemEndpoint, id);
+
+            int count = await AddToCart(addedItem);
+
+            // Display the confirmation message
+            var results = new ShoppingCartRemoveViewModel
+            {
+                Message = addedItem.Name + " has been added to your shopping cart.",
+                CartTotal = await GetTotal(),
+                CartCount = await GetCount(),
+                ItemCount = count,
+                DeleteId = id
+            };
+
+            // appState.setCartCount(model.CartCount);
+            IsOpen = true;
+            StateHasChanged();
+        }
+
+
+        void GoToCart()
+        {
+            IsOpen = false;
+            _navManager.NavigateTo("/MyCart");
+
+        }
+
+
+        #region common
+        public async Task<int> GetCount()
+        {
+            // Get the count of each item in the cart and sum them up
+
+            //var user = (await authenticationStateTask).User;
+            var CanteenID = await _Cartrepo.GetCenteenId();
+            var UserID = await _Cartrepo.GetUserId();
+            // Get the matching cart and item instances
+            var cartItems1 = await _Cartrepo.Get(Endpoints.CartEndpoint);
+            // var count? = cartItems.Where(x => x.CanteenId == CanteenID && x.UserId == UserID).Select(x => x.Item).Count();  // User ID find From Session
+
+
+            // Get the count of each item in the cart and sum them up
+            int? count = 10;// (from cartItems in cartItems1
+                            //where cartItems.CanteenId == CanteenID && cartItems.UserId == UserID
+                            //select cartItems.Count).Sum();
+                            // Return 0 if all entries are null
+            return count ?? 0;
+        }
+
+        public async Task<decimal> GetTotal()
+        {
+            // Multiply item price by count of that item to get
+            // the current price for each of those items in the cart
+            // sum all item price totals to get the cart total
+
+            //var user = (await authenticationStateTask).User;
+            var CanteenID = await _Cartrepo.GetCenteenId();
+            var UserID = await _Cartrepo.GetUserId();
+            // Get the matching cart and item instances
+            var cartItems1 = await _Cartrepo.Get(Endpoints.CartEndpoint);
+            decimal? total = (from cartItems in cartItems1
+                              where cartItems.CanteenId == CanteenID && cartItems.UserId == UserID
+                              select (int?)cartItems.Count *
+                              cartItems.Item.Price).Sum();
+
+            return total ?? decimal.Zero;
+        }
+
+        public async Task<int> AddToCart(Item item)
+        {
+
+
+            //var user = (await authenticationStateTask).User;
+            var CanteenID = await _Cartrepo.GetCenteenId();
+            var UserID = await _Cartrepo.GetUserId();
+            // Get the matching cart and item instances
+            var cartItems = await _Cartrepo.Get(Endpoints.CartEndpoint);
+            Thread.Sleep(2000);
+            var cartItem = cartItems.FirstOrDefault(x => x.ItemId == item.Id && x.UserId == UserID && x.CanteenId == CanteenID);  // User ID find From Session
+
+
+            if (cartItem == null)
+            {
+                // Create a new cart item if no cart item exists
+                cartItem = new Cart
+                {
+                    ItemId = item.Id,
+                    Count = 1,
+                    CanteenId = CanteenID,
+                    UserId = UserID,
+                    CreatedDate = DateTime.Now,
+                    Status = 1
+                };
+            }
+            else
+            {
+                // If the item does exist in the cart,
+                // then add one to the quantity
+                cartItem.Count++;
+            }
+            // Save changes
+
+            isSuccess = await _Cartrepo.Create(Endpoints.CartEndpoint, cartItem);
+            if (isSuccess)
+            {
+                _toastService.ShowSuccess("Category Created Successfully", "");
+            }
+
+            return cartItem.Count;
+        }
+        #endregion
+
+    }

@@ -1,0 +1,97 @@
+﻿@page "/admin/view/{Id}"
+@inject IAdminRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+
+
+<h3>View Admin Details</h3>
+<hr />
+<br />
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+    <ErrorMessage Message="Invalid Selection. Please Try Again" />
+}
+else if (Model == null)
+{
+    <LoadingMessage Message="Loading Admin Details" />
+}
+else
+{
+
+    <div class="row">
+        <div class="col-6">
+            <table class="table table-responsive">
+                <tr>
+                    <td>
+                        <strong>First Name</strong>
+                    </td>
+                    <td>@Model.FirstName</td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>Last Name</strong>
+                    </td>
+                    <td>@Model.LastName</td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>Email</strong>
+                    </td>
+                    <td>@Model.Email</td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>Enrollment No</strong>
+                    </td>
+                    <td>@Model.EnrollmentNo</td>
+                </tr>
+
+            </table>
+        </div>
+      
+    </div>
+}
+
+<button @onclick="GoToEdit" class="btn btn-outline-warning">
+    <span class="oi oi-pencil"></span>
+    Edit Admin
+</button>
+<button @onclick="GoToDelete" class="btn btn-outline-danger">
+    <span class="oi oi-circle-x"></span>
+    Delete Admin
+</button>
+<button @onclick="BackToList" class="btn btn-outline-secondary">
+    <span class="oi oi-media-skip-backward"></span>
+    Back To List
+</button>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private User Model = new User();
+
+    protected override async Task OnInitializedAsync()
+    {
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.UserEndpoint, id);
+        _toastService.ShowInfo($"Now Viewing {Model.FirstName}", "");
+
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/admin/");
+    }
+
+    private void GoToEdit()
+    {
+        _navManager.NavigateTo($"/admin/edit/{Model.UserId}");
+    }
+
+    private void GoToDelete()
+    {
+        _navManager.NavigateTo($"/admin/delete/{Model.UserId}");
+    }
+
+}

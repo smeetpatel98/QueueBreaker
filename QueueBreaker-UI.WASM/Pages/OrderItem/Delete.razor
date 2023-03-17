@@ -1,0 +1,75 @@
+﻿@page "/orderitem/delete/{Id}"
+@attribute [Authorize(Roles = "Admin")]
+@inject IOrderItemRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+<h3 class="card-title">Are You Sure You Want to Delete This Record?</h3>
+<hr />
+<br />
+@if (!isSuccess)
+{
+    <ErrorMessage Message="Somewthing Went Wrong WIth the Operation" />
+}
+
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+    <ErrorMessage Message="Invalid Selection. Please Try Again" />
+}
+else if (Model == null)
+{
+    <LoadingMessage Message="Loading Category Details" />
+}
+else
+{
+    <div class="col-md-4">
+        <table class="table table-responsive">
+            <tr>
+                <td> Name</td>
+                <td>@Model.Order.OrderItems</td>
+            </tr>
+
+
+        </table>
+        <br />
+    </div>
+}
+<br />
+
+<button @onclick="DeleteOrderItem" class="btn btn-danger">
+    <span class="oi oi-delete"></span>
+    Delete Canteeen
+</button>
+
+<button @onclick="BackToList" class="btn btn-outline-secondary">
+    <span class="oi oi-media-skip-backward"></span>
+    Back To List
+</button>
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private OrderItem Model = new OrderItem();
+    private bool isSuccess = true;
+    protected override async Task OnInitializedAsync()
+    {
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.OrderItemEndpoint, id);
+    }
+
+    private async Task DeleteOrderItem()
+    {
+        isSuccess = await _repo.Delete(Endpoints.OrderItemEndpoint, Model.Id);
+        if (isSuccess)
+        {
+            _toastService.ShowError("OrderItem Deleted Successfully", "");
+            BackToList();
+        }
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/OrderItem/");
+    }
+}

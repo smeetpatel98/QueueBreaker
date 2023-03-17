@@ -1,0 +1,59 @@
+﻿@page "/review1/"
+
+@inject IOrderRepository _repo
+@*@inject HttpClient _client*@
+<h3 class="card-title">Review</h3>
+<hr />
+<br />
+@if (Model == null)
+{
+    <LoadingMessage Message="Loading Review" />
+}
+else
+{
+
+    <br />
+    @if (Model.Count < 1)
+    {
+        <LoadingMessage Message="There are no Review for your Store" />
+    }
+    else
+    {
+
+        <table class="table table-responsive">
+            <thead>
+                <tr>
+                    <th style="width: 250px;">Order ID</th>
+                    <th style="width: 250px;">EnrollmentNo</th>
+                    <th style="width: 250px;">Review</th>
+                    <th style="width: 250px;">Date</th>
+                    <th style="width: 250px;">View</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model)
+                {
+                    <tr>
+                        <td>
+                            @m.Id
+                        </td>
+                        <td>@m.User.EnrollmentNo</td>
+                        <td>
+                            @m.Review
+                        </td>
+                        <td>@m.CreatedDate</td>
+                        <td>@m.Review</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private IList<Order> Model;
+    protected async override Task OnInitializedAsync()
+    {
+        Model = await _repo.Get(Endpoints.OrderplaceEndpoint);
+    }
+}

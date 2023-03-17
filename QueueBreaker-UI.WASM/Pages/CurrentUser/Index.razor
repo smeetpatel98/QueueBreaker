@@ -1,0 +1,95 @@
+﻿@page "/userprofile/"
+
+@inject IUserProfileRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+@using System.Security.Claims
+
+<h3 class="card-title">User Profile Details</h3>
+<hr />
+<br />
+
+
+@if (Model == null)
+{
+    <LoadingMessage Message="Loading UserProfile Details" />
+}
+else
+{
+    <div class="col-md-4">
+        <table class="table table-responsive">
+            <tr>
+                <td>UserName</td>
+                <td>@Model.UserName</td>
+            </tr>
+            <tr>
+                <td>Address 1</td>
+                <td>@Model.Address1</td>
+            </tr>
+            <tr>
+                <td>Address 2</td>
+                <td>@Model.Address2</td>
+            </tr>
+            <tr>
+                <td>City</td>
+                <td>@Model.City</td>
+            </tr>
+            <tr>
+                <td>State</td>
+                <td>@Model.State</td>
+            </tr>
+            <tr>
+                <td>Country</td>
+                <td>@Model.Country</td>
+            </tr>
+            <tr>
+                <td>Mobile</td>
+                <td>@Model.Mobile</td>
+            </tr>
+        </table>
+        <br />
+    </div>}
+<br />
+
+
+<button @onclick="GoToEdit" class="btn btn-warning">
+    <span class="oi oi-pencil"></span>
+    Edit User Profile
+</button>
+<button @onclick="GoToUpdatePassword" class="btn btn-success">
+    Update Password
+    </button>
+<button onclick="goBack()" type="button" class="btn btn-secondary">
+    <span class="oi oi-media-skip-backward"></span>
+    Back
+</button>
+
+@code { [Parameter]
+    public string Id { get; set; }
+
+    private UserProfileModel Model = new UserProfileModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        //var pId = ClaimsPrincipal.Current.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Sid).Value;
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.GetProfile(Endpoints.CurrentUserProfileEndpoint);
+        _toastService.ShowInfo($"Now Viewing {Model.UserName}", "");
+    }
+
+    //private void BackToList()
+    //{
+    //    _navManager.NavigateTo("/dashboard");
+    //}
+
+    private void GoToEdit()
+    {
+        _navManager.NavigateTo($"/userprofile/edit/{Model.ProfileId}");
+    }
+
+    private void GoToUpdatePassword()
+    {
+        _navManager.NavigateTo($"/userprofile/updatepassword/{Model.ProfileId}");
+    }
+}
+

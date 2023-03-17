@@ -1,0 +1,75 @@
+﻿@page "/canteen/edit/{Id}"
+@attribute [Authorize(Roles = "SuperAdmin")]
+@inject ICanteenRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+<h3 class="card-title">Edit Canteen</h3>
+<hr />
+<br />
+@if (!isSuccess)
+{
+    <ErrorMessage Message="Somewthing Went Wrong With the Operation" />
+}
+
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+    <ErrorMessage Message="Invalid Selection. Please Try Again" />
+}
+else if (Model == null)
+{
+    <LoadingMessage Message="Loading Canteen For Edit" />
+}
+else
+{
+    <EditForm Model="Model" OnValidSubmit="EditCanteen">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-group">
+            <label for="firstname"> Name</label>
+            <InputText @bind-Value="Model.Name" class="form-control" id="firstname" />
+        </div>
+        <div>
+            <label for="Active">Active</label>
+            <InputCheckbox @bind-Value="Model.Status" class="form-control custom-checkbox" id="status" />
+        </div>
+
+        <button class="btn btn-primary" type="submit">
+            <span class="oi oi-pencil"></span>
+            Submit Changes
+        </button>
+        <button @onclick="BackToList" class="btn btn-outline-secondary">
+            <span class="oi oi-media-skip-backward"></span>
+            Back To List
+        </button>
+    </EditForm>
+}
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Canteen Model = new Canteen();
+    private bool isSuccess = true;
+    protected override async Task OnInitializedAsync()
+    {
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.CanteenEndpoint, id);
+    }
+
+    private async Task EditCanteen()
+    {
+        isSuccess = await _repo.Update(Endpoints.CanteenEndpoint, Model, Model.Id);
+        if (isSuccess)
+        {
+            _toastService.ShowWarning("canteen Updated Successfully", "");
+            BackToList();
+        }
+
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/canteen/");
+    }
+}

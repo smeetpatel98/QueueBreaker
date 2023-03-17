@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.808.4
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QueueBreaker-API", "QueueBreaker-API\QueueBreaker-API.csproj", "{6E622B6C-2057-46CB-9F4C-A9CE294759D4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QueueBreaker-UI.WASM", "QueueBreaker-UI.WASM\QueueBreaker-UI.WASM.csproj", "{FDAD5BBC-732A-4E3C-9E2A-A37E3A8F2218}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E622B6C-2057-46CB-9F4C-A9CE294759D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E622B6C-2057-46CB-9F4C-A9CE294759D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E622B6C-2057-46CB-9F4C-A9CE294759D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E622B6C-2057-46CB-9F4C-A9CE294759D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDAD5BBC-732A-4E3C-9E2A-A37E3A8F2218}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDAD5BBC-732A-4E3C-9E2A-A37E3A8F2218}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDAD5BBC-732A-4E3C-9E2A-A37E3A8F2218}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDAD5BBC-732A-4E3C-9E2A-A37E3A8F2218}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BF9489C9-C48F-4C5A-AB5F-1C8C395F1BFD}
+	EndGlobalSection
+EndGlobal

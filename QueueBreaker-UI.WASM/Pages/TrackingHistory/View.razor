@@ -1,0 +1,119 @@
+﻿@page "/tracking/view/{Id}"
+
+@inject ITrackingHistoryRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+
+<h3 class="card-title">Tracking Details</h3>
+<hr />
+<br />
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+<ErrorMessage Message="Invalid Selection. Please Try Again" />
+ }
+else if (Model == null)
+{
+<LoadingMessage Message="Loading TrackingHistory Details" />
+ }
+else
+{
+<div class="col-md-4">
+    <table class="table table-responsive">
+        <tr>
+            <td>Item Name</td>
+            <td>@Model.ItemName</td>
+        </tr>
+        <tr>
+            <td>Item Destination</td>
+            <td>@Model.ItemDestination</td>
+        </tr>
+        <tr>
+            <td>Item BarCode</td>
+            <td>@Model.ItemBarCode</td>
+        </tr>
+        <tr>
+            <td>Quantity</td>
+            <td>@Model.Quantity</td>
+        </tr>
+        <tr>
+            <td>Destination Pmb</td>
+            <td>@Model.DestinationPmb</td>
+        </tr>
+        <tr>
+            <td>Dispatch Date</td>
+            <td>@string.Format("{0:MM-dd-yyyy}", Model.DispatchDate)</td>
+        </tr>
+        <tr>
+            <td>Delivery Date</td>
+            <td>@string.Format("{0:MM-dd-yyyy}", Model.DeliveryDate)</td>
+        </tr>
+        <tr>
+            <td>PackageType</td>
+            <td>@pac</td>
+        </tr>
+        <tr>
+            <td>Status</td>
+            <td>@stat</td>
+        </tr>
+        <tr>
+            <td>Active</td>
+            <td>@Model.Active</td>
+        </tr>
+    </table>
+    <br />
+</div>}
+<br />
+
+
+<button @onclick="GoToEdit" class="btn btn-warning">
+    <span class="oi oi-pencil"></span>
+    Edit Tracking
+</button>
+<button @onclick="GoToDelete" class="btn btn-danger">
+    <span class="oi oi-circle-x"></span>
+    Delete Tracking
+</button>
+<button @onclick="BackToList" class="btn btn-secondary">
+    <span class="oi oi-media-skip-backward"></span>
+    Back To List
+</button>
+
+@code { [Parameter]
+    public string Id { get; set; }
+    public string pac { get; set; }
+    public string stat { get; set; }
+
+    private IList<KeyValues> statuses;
+    private IList<KeyValues> packages;
+    private TrackingHistoryModel Model = new TrackingHistoryModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        statuses = await _repo.GetEnums(Endpoints.StatusEndpoint);
+        packages = await _repo.GetEnums(Endpoints.PackageTypeEndpoint);
+
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.TrackingHistoryEndpoint, id);
+
+        var pa = Model.PackageType.ToString();
+        pac = packages.Where(x => x.Value == pa).Select(x => x.Text).FirstOrDefault();
+        var st = Model.Status.ToString();
+         stat = statuses.Where(x => x.Value == st).Select(x => x.Text).FirstOrDefault();
+
+        _toastService.ShowInfo($"Now Viewing {Model.ItemName} {Model.DestinationPmb}");
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/tracking/");
+    }
+
+    private void GoToEdit()
+    {
+        _navManager.NavigateTo($"/tracking/edit/{Model.TrackingHistoryId}");
+    }
+
+    private void GoToDelete()
+    {
+        _navManager.NavigateTo($"/tracking/delete/{Model.TrackingHistoryId}");
+    } }

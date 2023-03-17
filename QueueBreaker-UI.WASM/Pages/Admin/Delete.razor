@@ -1,0 +1,87 @@
+﻿@page "/admin/delete/{Id}"
+@attribute [Authorize(Roles = "SuperAdmin")]
+
+@inject IAdminRepository _repo
+@inject NavigationManager _navManager
+@inject IFileUpload _fileUpload
+@inject IToastService _toastService
+
+<h3>Are You Sure You Want to Delete This Record?</h3>
+<hr />
+<br />
+@if (!isSuccess)
+{
+    <ErrorMessage Message="Something Went Wrong With the Operation" />
+}
+
+
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+    <ErrorMessage Message="Invalid Selection. Please Try Again" />
+}
+else if (Model == null)
+{
+    <LoadingMessage Message="Loading Admin User Details" />
+}
+else
+{
+    <div class="row">
+        <div class="col-6">
+            <table class="table table-responsive">
+                <tr>
+                    <td>
+                        <strong>First Name</strong>
+                    </td>
+                    <td>@Model.FirstName</td>
+                </tr>
+               
+                
+                
+
+            </table>
+        </div>
+       
+    </div>
+}
+
+<button @onclick="DeleteAdmin" class="btn btn-danger">
+    <span class="oi oi-delete"></span>
+    Delete Admin
+</button>
+
+<button @onclick="BackToList" class="btn btn-outline-secondary">
+    <span class="oi oi-media-skip-backward"></span>
+    Back To List
+</button>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private User Model = new User();
+    private bool isSuccess = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        int id = Convert.ToInt32(Id);
+        Model = await _repo.Get(Endpoints.UserEndpoint, id);
+    }
+
+    private async Task DeleteAdmin()
+    {
+       
+        isSuccess = await _repo.Delete(Endpoints.UserEndpoint, Model.UserId);
+        if (isSuccess)
+        {
+            _toastService.ShowError("Admin User Deleted Successfully", "");
+            BackToList();
+        }
+
+    }
+
+    private void BackToList()
+    {
+        _navManager.NavigateTo("/admin/");
+    }
+
+}

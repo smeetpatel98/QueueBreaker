@@ -1,0 +1,97 @@
+﻿@page "/userprofile/edit/{Id}"
+@*@attribute [Authorize(Roles = "Administrator")]*@
+@inject IUserProfileRepository _repo
+@inject NavigationManager _navManager
+@inject IToastService _toastService
+<h3 class="card-title">Edit UserProfile</h3>
+<hr />
+<br />
+@if (!isSuccess)
+{
+<ErrorMessage Message="Somewthing Went Wrong With the Operation" />}
+
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+<ErrorMessage Message="Invalid Selection. Please Try Again" /> }
+            else if (Model == null)
+            {
+<LoadingMessage Message="Loading UserProfile For Edit" /> }
+            else
+            {
+<EditForm Model="Model" OnValidSubmit="EditUserProfile">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="UserName">UserName</label>
+        <InputText @bind-Value="Model.UserName" class="form-control" id="UserName" />
+    </div>
+    <div class="form-group">
+        <label for="lastname">Address 1</label>
+        <InputTextArea @bind-Value="Model.Address1" class="form-control" id="Address1" />
+    </div>
+    <div class="form-group">
+        <label for="bio">Address 2</label>
+        <InputTextArea @bind-Value="Model.Address2" class="form-control" id="Address2" />
+    </div>
+    <div class="form-group">
+        <label for="bio">City</label>
+        <InputText @bind-Value="Model.City" class="form-control" id="City" />
+    </div>
+    <div class="form-group">
+        <label for="bio">State</label>
+        <InputText @bind-Value="Model.State" class="form-control" id="State" />
+    </div>
+    <div class="form-group">
+        <label for="bio">Country</label>
+        <InputText @bind-Value="Model.Country" class="form-control" id="Country" />
+    </div>
+    <div class="form-group">
+        <label for="bio">Mobile</label>
+        <InputNumber @bind-Value="Model.Mobile" class="form-control" id="Mobile" />
+    </div>
+    <div>
+        <label for="Active">Active</label>
+        <InputCheckbox @bind-Value="Model.Active" class="form-control custom" id="Active" />
+    </div>
+    <br/>
+    <button class="btn btn-primary" type="submit">
+        <span class="oi oi-pencil"></span>
+        Submit Changes
+    </button>
+    <button @onclick="BackToList" class="btn btn-outline-secondary">
+        <span class="oi oi-media-skip-backward"></span>
+        Back To List
+    </button>
+</EditForm>}
+<style>
+    .custom {
+        width: 4% !important;
+    }
+</style>
+
+@code { [Parameter]
+            public string Id { get; set; }
+
+            private UserProfileModel Model = new UserProfileModel();
+            private bool isSuccess = true;
+            protected override async Task OnInitializedAsync()
+            {
+                int id = Convert.ToInt32(Id);
+                Model = await _repo.Get(Endpoints.UserProfileEndpoint, id);
+            }
+
+            private async Task EditUserProfile()
+            {
+                isSuccess = await _repo.Update(Endpoints.UserProfileEndpoint, Model, Model.ProfileId);
+                if (isSuccess)
+                {
+                    _toastService.ShowWarning("UserProfile Updated Successfully", "");
+                    BackToList();
+                }
+
+            }
+
+            private void BackToList()
+            {
+                _navManager.NavigateTo("/userprofile/");
+            } }

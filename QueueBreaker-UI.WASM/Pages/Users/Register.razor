@@ -1,0 +1,117 @@
+﻿@page "/Register"
+@attribute [Authorize(Roles = "SuperAdmin")]
+
+@using QueueBreaker_UI.WASM.Models
+@using QueueBreaker_UI.WASM.Contracts
+
+@inject IUserRepository _repo
+@inject NavigationManager _navMan
+@inject IToastService _toastService
+
+<div class="card">
+    <br />
+    <h3 class="card-title text-center">Register User</h3>
+    @if (!isSuccess)
+    {
+        <ErrorMessage Message="Something went wrong with the registration attempt" />}
+    <div class="card-body">
+        <EditForm Model="Model" OnValidSubmit="HandleRegistration">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="row">
+                <div class="col-md-6">
+                    <div>
+                        <label for="email">Email Address</label>
+                        <InputText Id="email" class="form-control" @bind-Value="Model.Email" />
+                        <ValidationMessage For="@(() => Model.Email)" />
+                    </div>
+                    <div>
+                        <label for="password">Password</label>
+                        <InputText Id="password" type="password" class="form-control" @bind-Value="Model.Password" />
+                        <ValidationMessage For="@(() => Model.Password)" />
+                    </div>
+                    @*<div>
+                            <label for="confirmpassword">Confirm Password</label>
+                            <InputText Id="confirmpassword" type="password" class="form-control" @bind-Value="Model.ConfirmPassword" />
+                            <ValidationMessage For="@(() => Model.ConfirmPassword)" />
+                        </div>
+                        <div>
+                            <label for="Address1">Address 1</label>
+                            <InputText Id="Address1" type="text" class="form-control" @bind-Value="Model.Address1" />
+                            <ValidationMessage For="@(() => Model.Address1)" />
+                        </div>
+                        <div>
+                            <label for="Address2">Address 2</label>
+                            <InputText Id="Address2" type="text" class="form-control" @bind-Value="Model.Address2" />
+                            <ValidationMessage For="@(() => Model.Address2)" />
+                        </div>
+                        <div>
+                            <label for="UserName">UserName</label>
+                            <InputText Id="UserName" type="text" class="form-control" @bind-Value="Model.UserName" />
+                            <ValidationMessage For="@(() => Model.UserName)" />
+                        </div>*@
+                </div>
+                <div class="col-md-6">
+                    <div>
+                        <label for="City">City</label>
+                        <InputText Id="City" type="text" class="form-control" @bind-Value="Model.City" />
+                        <ValidationMessage For="@(() => Model.City)" />
+                    </div>
+                    <div>
+                        <label for="State">State</label>
+                        <InputText Id="State" type="text" class="form-control" @bind-Value="Model.State" />
+                        <ValidationMessage For="@(() => Model.State)" />
+                    </div>
+                    <div>
+                        <label for="Country">Country</label>
+                        <InputText Id="Country" type="text" class="form-control" @bind-Value="Model.Country" />
+                        <ValidationMessage For="@(() => Model.Country)" />
+                    </div>
+                    <div>
+                        <label for="ZipCode">ZipCode</label>
+                        <InputNumber Id="ZipCode" type="text" class="form-control" @bind-Value="Model.ZipCode" />
+                        <ValidationMessage For="@(() => Model.ZipCode)" />
+                    </div>
+                    @*<div>
+                            <label for="Mobile">Mobile</label>
+                            <InputText Id="Mobile" type="number" maxlength="11" class="form-control" @bind-Value="Model.Mobile" />
+                            <ValidationMessage For="@(() => Model.Mobile)" />
+                        </div>
+                        <div>
+                            <label>Active</label>
+                            <InputCheckbox Id="Active" class="form-control custom" @bind-Value="Model.Active" />
+                            <ValidationMessage For="@(() => Model.Active)" />
+                        </div>*@
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col-md-5"></div>
+                <button type="submit" class="col-md-2 btn btn-primary btn-block">Register</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+<style>
+    .custom {
+        width: 4% !important;
+    }
+</style>
+
+@code { private User Model = new User();
+    bool isSuccess = true;
+
+    private async Task HandleRegistration()
+    {
+
+        Model.RoleId = 2;
+        isSuccess = await _repo.Create(Endpoints.UserEndpoint, Model);
+        if (isSuccess)
+        {
+            _toastService.ShowSuccess("User Registration Successfully", "");
+            _navMan.NavigateTo("/userlist");
+        }
+
+
+        
+    } }

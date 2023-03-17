@@ -1,0 +1,324 @@
+﻿@page "/tracking"
+
+@inject ITrackingHistoryRepository _repo
+@inject ITrackingHeaderRepository _headrepo
+@inject IMailBoxRepository _mailrepo
+@inject IMailBoxAuthoritiesRepository _authrepo
+@inject IMailBoxAllotmentRepository _allotrepo
+@inject IToastService _toastService
+@inject NavigationManager _navManager
+@*@inject HttpClient _client*@
+<h3 class="card-title">Tracking</h3>
+<hr />
+<br />
+
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="HeaderModel" OnValidSubmit="CreateTracking">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="row">
+                <div class="col-md-6">
+                    <div>
+                        <label>PMB Number</label>
+                        <select @onchange="AllotUser" class="form-control" id="author">
+                            <option value="">@ConstantRepository.SelectOption</option>
+                            @if (mailboxes != null)
+                            {
+                                foreach (var box in mailboxes)
+                                {
+                                    <option value="@box.MailBoxId">@box.Pmbnumber</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label>Authorized User -- Alloted User</label>
+                        <select @bind="HeaderModel.MailBoxAuthoritiesId" class="form-control" id="author">
+                            <option value="">@ConstantRepository.SelectOption</option>
+                            @if (authorities != null)
+                            {
+                                foreach (var auth in users)
+                                {
+                                    <option value="@auth.MailBoxAuthoritiesId">@auth.ContactName -- @auth.UserName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    @*<div>
+                    <label for="Description">Item Description</label>
+                    <InputTextArea @bind-Value="Model1.Description" class="form-control" id="Description" />
+                </div>*@
+                </div>
+                @*</div>*@
+                @*<div class="row">*@
+                <div class="col-md-6">
+                    <div>
+                        <label>Signature</label>
+                        <SignaturePad @ref="signaturePad" Class="setter"></SignaturePad>
+                        <br />
+                        <button type="button" @onclick="ClearSignature" class="btn btn-danger">Clear</button>
+                        @*<button type="button" @onclick="SaveSignature" class="btn btn-primary">Save</button>*@
+                    </div>
+                </div>
+            </div>
+            <br />
+            <button class="btn btn-primary" type="submit">
+                <span class="oi oi-pencil"></span>
+                Create Tracking
+            </button>
+            @*<InputNumber @bind-Value="HeaderModel.TrackingHeaderId" class="form-control" id="MailBoxNotesId" style="display:none;"></InputNumber>*@
+        </EditForm>
+    </div>
+</div>
+<br />
+<EditForm Model="Model1" hidden="@form" OnValidSubmit="CreateTrackingDetails">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <h3 class="card-title">Tracking Details</h3>
+    <div class="row">
+        <div class="col-md-6">
+            <div>
+                <label for="DeliveyDate">Delivery Date</label>
+                <InputDate @bind-Value="Model1.DeliveryDate" class="form-control" id="DeliveryDate" />
+            </div>
+            <div>
+                <label for="ItemBarCode">Item Barcode</label>
+                <InputText @bind-Value="Model1.ItemBarCode" class="form-control" id="ItemBarCode" />
+            </div>
+            <div>
+                <label>Package Type</label>
+                <select @bind="Model1.PackageType" class="form-control" id="author">
+                    <option value="">@ConstantRepository.SelectOption</option>
+                    @if (packages != null)
+                    {
+                        foreach (var package in packages)
+                        {
+                            <option value="@package.Value">@package.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+            <br />
+            <button class="btn btn-primary" type="submit">
+                <span class="oi oi-pencil"></span>
+                Create Tracking Details
+            </button>
+        </div>
+    </div>
+</EditForm>
+<br />
+<div hidden="@form">
+
+    <h3 class="card-title">Tracking Details List</h3>
+    <br />
+    @if (Model == null)
+    {
+        <LoadingMessage Message="Loading Tracking" />
+    }
+    else
+    {
+        @*<a href="/tracking/create" class="btn btn-primary">
+                <span class="oi oi-plus"></span>
+                Create New Tracking
+            </a>*@
+        <br />
+        @if (Model.Count < 1)
+        {
+            <LoadingMessage Message="There are no Tracking in the data store.
+                        Click 'Create Tracking' to Begin " />
+        }
+        else
+        {
+            <br />
+            <table class="table table-responsive">
+                <thead>
+                    <tr>
+                        <th>Barcode</th>
+
+                        <th>Delivery Date</th>
+
+                        @*<th>Delivery Date</th>*@
+
+                        <th hidden="@sign">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var trackinghistory in Model)
+                    {
+                        <tr>
+                            <td>
+                                @trackinghistory.ItemBarCode
+                            </td>
+                            @*<td>@trackinghistory.ItemBarCode</td>*@
+                            <td>@trackinghistory.DeliveryDate</td>
+                            @*<td>@trackinghistory.Description</td>*@
+                            @*<td>@string.Format("{0:MM-dd-yyyy}", trackingheader.DeliveryDate)</td>*@
+                            @*<td>
+                                    @{
+                                        var pa = trackinghistory.PackageType.ToString();
+                                        var p = packages.Where(x => x.Value == pa).Select(x => x.Text).FirstOrDefault();
+                                        @p
+                                    }
+                                </td>*@
+                            <td hidden="@sign">
+                                <a class="btn btn-primary" href="/tracking/View/@trackinghistory.TrackingHistoryId">
+                                    <span class="oi oi-book"></span>
+                                </a>
+                                <a class="btn btn-warning" href="/tracking/edit/@trackinghistory.TrackingHistoryId">
+                                    <span class="oi oi-pencil"></span>
+                                </a>
+                                <a class="btn btn-danger" href="/tracking/delete/@trackinghistory.TrackingHistoryId">
+                                    <span class="oi oi-delete"></span>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }}
+</div>
+<style>
+    .custom {
+        width: 4% !important;
+    }
+
+    .setter {
+        min-height: 100% !important;
+        min-width: 100% !important;
+        height: 190px !important;
+        width: 570px !important;
+    }
+</style>
+
+@code {[Parameter]
+    public int id { get; set; }
+    public bool sign { get; set; } = false;
+    public bool form { get; set; } = true;
+    public string pmb { get; set; }
+    public string contactname { get; set; }
+    public string Id { get; set; }
+    public int mailId { get; set; }
+    public int authId { get; set; }
+    public List<AuthAllotUser> users { get; set; }
+
+    private IList<TrackingHistoryModel> Model;
+    private IList<TrackingHeaderModel> Models;
+    private TrackingHistoryModel Model1 = new TrackingHistoryModel();
+    private TrackingHeaderModel HeaderModel = new TrackingHeaderModel();
+    private IList<KeyValues> statuses;
+    private IList<MailBoxModel> mailboxes;
+    private IList<KeyValues> packages;
+    private IList<MailBoxAuthoritiesModel> authorities;
+    private IList<MailBoxAllotmentModel> allotments;
+    private bool isSuccess = true;
+    SignaturePad signaturePad;
+    SignaturePad.SupportedSaveAsTypes signatureType;
+    string dataURL;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        mailboxes = await _mailrepo.Get(Endpoints.MailBoxEndpoint);
+        statuses = await _repo.GetEnums(Endpoints.StatusEndpoint);
+        packages = await _repo.GetEnums(Endpoints.PackageTypeEndpoint);
+        allotments = await _allotrepo.Get(Endpoints.MailBoxAllotmentEndpoint);
+        authorities = await _authrepo.Get(Endpoints.MailBoxAuthoritiesEndpoint);
+        //authorities = authorities.GroupBy(x => x.ContactName).Select(x => x.FirstOrDefault()).ToList();
+
+        Models = await _headrepo.Get(Endpoints.TrackingHeaderEndpoint);
+        allotments = allotments.Where(x => x.Active == true).ToList();
+        authorities = authorities.Where(x => x.Active == true).ToList();
+
+        users = (from mb in mailboxes
+                     //where mb.MailBoxId == mailId
+                 join mal in allotments on mb.MailBoxId equals mal.MailBoxId
+                 join mau in authorities on mb.MailBoxId equals mau.MailBoxId
+                 select new AuthAllotUser()
+                 {
+                     MailBoxId = mb.MailBoxId,
+                     MailBoxAuthoritiesId = mau.MailBoxAuthoritiesId,
+                     UserName = mal.Profile.UserName,
+                     ContactName = mau.ContactName,
+                 }).ToList();
+
+    }
+
+
+    private async Task CreateTracking()
+    {
+        mailId = HeaderModel.MailBoxId;
+        // authId = HeaderModel.MailBoxAuthoritiesId;
+
+        signatureType = SignaturePad.SupportedSaveAsTypes.png;
+        dataURL = await signaturePad.ToDataURL(signatureType);
+        var base64Signature = dataURL.Split(",")[1];
+        HeaderModel.base64signatureURL = base64Signature;
+
+        HeaderModel = await _headrepo.CreateData(Endpoints.TrackingHeaderEndpoint, HeaderModel);
+        if (HeaderModel.TrackingHeaderId != 0)
+        {
+            _toastService.ShowSuccess("Tracking Created Successfully", "");
+            //id = HeaderModel.TrackingHeaderId;
+            await TrackingDetails();
+            //await OnInitializedAsync();
+
+        }
+    }
+
+    private async Task CreateTrackingDetails()
+    {
+        Model1.DeliveryDate = System.DateTime.Now;
+        Model1.MailboxId = HeaderModel.MailBoxId;
+        Model1.MailBoxAuthoritiesId = HeaderModel.MailBoxAuthoritiesId;
+        Model1.TrackingHeaderId = HeaderModel.TrackingHeaderId;
+        isSuccess = await _repo.Create(Endpoints.TrackingHistoryEndpoint, Model1);
+        if (isSuccess)
+        {
+            _toastService.ShowSuccess("Details Added Successfully");
+            //await OnInitializedAsync();
+            Model = await _repo.Get(Endpoints.TrackingHistoryEndpoint);
+            Model = Model.Where(x => x.TrackingHeaderId == HeaderModel.TrackingHeaderId).ToList();
+
+        }
+
+    }
+
+    private void ClearSignature()
+    {
+        signaturePad.Clear();
+    }
+
+    private void SaveSignature()
+    {
+        signaturePad.Save(SignaturePad.SupportedSaveAsTypes.png);
+    }
+
+    private void AllotUser(ChangeEventArgs e)
+    {
+        HeaderModel.MailBoxId = Convert.ToInt32(e.Value);
+        mailId = HeaderModel.MailBoxId;
+        //authId = HeaderModel.MailBoxAuthoritiesId;
+
+        users = (from mb in mailboxes
+                 where mb.MailBoxId == mailId
+                 join mal in allotments on mb.MailBoxId equals mal.MailBoxId
+                 join mau in authorities on mb.MailBoxId equals mau.MailBoxId
+                 select new AuthAllotUser()
+                 {
+                     MailBoxId = mb.MailBoxId,
+                     MailBoxAuthoritiesId = mau.MailBoxAuthoritiesId,
+                     UserName = mal.Profile.UserName,
+                     ContactName = mau.ContactName,
+                 }).ToList();
+    }
+
+    private async Task TrackingDetails()
+    {
+        //id = HeaderModel.TrackingHeaderId;
+        Model = await _repo.Get(Endpoints.TrackingHistoryEndpoint);
+        Model = Model.Where(x => x.TrackingHeaderId == HeaderModel.TrackingHeaderId).ToList();
+        form = false;
+        Model1.DeliveryDate = System.DateTime.Now;
+    }
+}

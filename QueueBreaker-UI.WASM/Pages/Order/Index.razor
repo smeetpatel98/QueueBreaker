@@ -1,0 +1,93 @@
+﻿@page "/order/"
+
+@inject IOrderRepository _repo
+@inject IItemRepository _itemrepo
+
+@*@inject IOrderItemRepository _orderItemrepo*@
+@inject IOrderRepository _authorRepo
+@*@inject HttpClient _client*@
+<h3 class="card-title">order</h3>
+<hr />
+<br />
+@if (Model == null)
+{
+    <LoadingMessage Message="Loading Item" />
+}
+else
+{
+    @*<a href="/Order/create" class="btn btn-primary">
+        <span class="oi oi-plus"></span>
+        Order
+    </a>*@
+    <br />
+    @if (Model.Count < 1)
+    {
+        <LoadingMessage Message="There are no Order in your list" />
+    }
+    else
+    {
+        @*<div class="form-group">
+                <label for="author">Canteens</label>
+                <select @bind="Model." class="form-control" id="canteen">
+                    <option value="">-- Select Canteens --</option>
+                    @if (Canteens != null)
+                    {
+                        foreach (var c in Canteens)
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    }
+                </select>
+            </div>*@
+        <table class="table table-responsive" >
+            <thead>
+                <tr>
+                    <th style="width: 250px;">Order ID</th>
+                    <th style="width: 250px;">EnrollmentNo</th>
+                    <th style="width: 250px;">Status</th>
+                    <th style="width: 250px;">Date</th>
+                    <th style="width: 250px;">View</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model)
+                {
+                    <tr>
+                        <td>
+                           @m.Id
+                        </td>
+                        <td>@m.User.EnrollmentNo</td>
+                        <td>@m.Status
+                        </td>
+                        <td>@m.CreatedDate</td>
+                        <td>
+                            <a href="/order/view/@m.Id" class="btn btn-primary">
+                                <span class="oi oi-book"></span>
+                            </a>
+                            @*<a href="/order/edit/@m.Id" class="btn btn-warning">
+                                <span class="oi oi-pencil"></span>
+                            </a>
+                            <a href="/order/delete/@m.Id" class="btn btn-danger">
+                                <span class="oi oi-delete"></span>
+                            </a>*@
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private IList<Order> Model;
+   // private IList<OrderItem> ol;
+  //  private IList<Item> orderItem;
+    protected async override Task OnInitializedAsync()
+    {
+        Model = await _repo.Get(Endpoints.OrderplaceEndpoint);
+       // orderItem = await _itemrepo.Get(Endpoints.ItemEndpoint);
+      //  orderItem = orderItem.ToList();
+        //ol = await _orderItemrepo.Get(Endpoints.OrderItemEndpoint);
+        //ol = ol.ToList();
+    }
+}

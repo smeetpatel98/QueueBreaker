@@ -1,0 +1,250 @@
+﻿@page "/MyCart"
+@inject AppState appState
+@inject IToastService _toastService
+@inject IItemRepository _Itemrepo
+@inject IOrderRepository _Orderrepo
+
+@inject ICartRepository _Cartrepo
+@inject NavigationManager _navManager
+
+@if (Model != null && Model.CartItems.Count() > 0)
+{
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">Cart Summary</h3>
+        </div>
+        <div class="panel-body">
+            <div id="update-message">
+            </div>
+            <table class="table table-striped table-hover ">
+                <thead>
+                    <tr>
+                        <th>
+                            Item Name
+                        </th>
+                        <th>
+                            Price (each)
+                        </th>
+                        <th>
+                            Quantity
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                @foreach (var item in Model.CartItems)
+                {
+                    <tr>
+                        <td>
+                            @item.Item.Name
+                        </td>
+                        <td>
+                            @item.Item.Price.ToString("N2") ₹
+                        </td>
+                        <td>
+                            @item.Count.ToString()
+                        </td>
+                        <td>
+                            <a class="btn btn-danger" @onclick="(()=> removeFromCart(item.ItemId))">Remove From Cart</a>
+                        </td>
+                    </tr>
+                }
+                <tr class="info">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td id="cart-total">
+                        Total : @Model.CartTotal.ToString("N2") ₹
+                    </td>
+                </tr>
+            </table>
+            @*<div class="form-group">
+                <label for="name">Review</label>
+                <InputText @bind-Value="OdModel.Review" class="form-control" id="Review" />
+            </div>*@
+            <a class="btn btn-primary" @onclick="(()=> BookOrder())">Book Order</a>
+
+        </div>
+    </div> }
+else
+{
+    <div class="custom-bg">
+        <p>There are no items in your cart currently. Please shop for something and add items..</p>
+    </div>}
+
+@code
+{ ShoppingCartViewModel Model;
+    private bool isSuccess = true;
+    //Order OdModel;
+    protected async override Task OnInitializedAsync()
+    {
+        Model = await shoppingCart();
+        var CanteenID = Model.CartItems.Select(x=>x.CanteenId).FirstOrDefault(); // Convert.ToInt32(user.Claims.First(claim => claim.Type == "CanteenID").Value);
+        await _Cartrepo.SetCenteenId(CanteenID);
+        var UserID = _Cartrepo.GetUserId();//Convert.ToInt32(user.Identity.Name);
+                                           //_toastService.ShowSuccess("Test", "asdfasdf");
+
+
+    }
+    public async Task<ShoppingCartViewModel> shoppingCart()
+    {
+        // var cart = await ShoppingCartService.GetCart();
+
+        //Set up our ViewModel
+        var viewModel = new ShoppingCartViewModel
+        {
+            CartItems = await GetCartItems()
+        };
+        //Return the view
+        return viewModel;
+    }
+    protected async Task removeFromCart(int id)
+    {
+
+        var vm = await RemoveFromCart(id);
+
+        var cartItem = Model.CartItems.FirstOrDefault(c => c.ItemId == id);
+        Model.CartItems.Remove(cartItem);
+        // Model.CartTotal = vm.CartTotal;
+        appState.setCartCount(vm.CartCount);
+        StateHasChanged();
+    }
+
+
+    public async Task BookOrder()
+    {
+        var CanteenID = await _Cartrepo.GetCenteenId();
+        var UserID = await _Cartrepo.GetUserId();
+        Order Ord = new Order();
+        Ord.UserId = UserID;
+        Ord.CanteenId = CanteenID;
+        //Ord.Review = OdModel.Review;
+        //var cartItem = Model.CartItems.FirstOrDefault(c => c.UserId == UserID);
+     //   var orderplace = await _Orderrepo.Create(Endpoints.OrderplaceEndpoint, Ord);
+        isSuccess = await _Orderrepo.Create(Endpoints.OrderplaceEndpoint, Ord);
+        if (isSuccess)
+        {
+            _toastService.ShowSuccess("Order Created Successfully", "");
+            BackToOrderList();
+        }
+    }
+    private void BackToOrderList()
+    {
+        _navManager.NavigateTo("/Order/");
+    }
+    public async Task<ShoppingCartRemoveViewModel> RemoveFromCart(int id)
+    {
+        // Remove the item from the cart
+        //var user = (await authenticationStateTask).User;
+        var CanteenID = await _Cartrepo.GetCenteenId();
+        var UserID = await _Cartrepo.GetUserId();
+        // Get the matching cart and item instances
+        var cartItems1 = await _Cartrepo.Get(Endpoints.CartEndpoint);
+        var cart = cartItems1.Where(x => x.CanteenId == CanteenID && x.UserId == UserID).ToList();  // User ID find From Session
+
+
+
+        // Get the name of the item to display confirmation
+
+        // Get the name of the album to display confirmation
+        var item = await _Itemrepo.Get(Endpoints.ItemEndpoint, id);
+        string itemName = item.Name;
+
+
+        // Remove from cart
+        int itemCount = await RemoveFromCartItem(id);
+
+        // Display the confirmation message
+        var results = new ShoppingCartRemoveViewModel
+        {
+            Message = "One (1) " + itemName +
+                " has been removed from your shopping cart.",
+            CartTotal = await GetTotal(),
+            CartCount = await GetCount(),
+            ItemCount = itemCount,
+            DeleteId = id
+        };
+        return results;
+    }
+    public async Task<List<Cart>> GetCartItems()
+    {
+        //var user = (await authenticationStateTask).User;
+        var CanteenID = await _Cartrepo.GetCenteenId();
+        var UserID = await _Cartrepo.GetUserId();
+        // Get the matching cart and item instances
+        var cartItems1 = await _Cartrepo.Get(Endpoints.CartEndpoint);
+        var cartItem = cartItems1.Where(x => x.CanteenId == CanteenID && x.UserId == UserID).ToList();  // User ID find From Session
+
+        return cartItem;
+    }
+
+    public async Task<int> RemoveFromCartItem(int id)
+    {
+        // Get the cart
+        //var user = (await authenticationStateTask).User;
+        var CanteenID = await _Cartrepo.GetCenteenId();
+        var UserID = await _Cartrepo.GetUserId();
+        // Get the matching cart and item instances
+        var cartItems1 = await _Cartrepo.Get(Endpoints.CartEndpoint);
+        var cartItem = cartItems1.FirstOrDefault(x => x.CanteenId == CanteenID && x.UserId == UserID && x.ItemId == id);  // User ID find From Session
+
+
+
+
+        int itemCount = 0;
+
+        if (cartItem != null)
+        {
+            if (cartItem.Count > 1)
+            {
+                cartItem.Count--;
+                itemCount = cartItem.Count;
+                await _Cartrepo.Update(Endpoints.CartEndpoint, cartItem, cartItem.Id);
+            }
+            else
+            {
+                await _Cartrepo.Delete(Endpoints.CartEndpoint, cartItem.Id);
+            }
+            // Save changes
+        }
+        return itemCount;
+    }
+    public async Task<int> GetCount()
+    {
+        // Get the count of each item in the cart and sum them up
+
+        //var user = (await authenticationStateTask).User;
+        var CanteenID = await _Cartrepo.GetCenteenId();
+        var UserID = await _Cartrepo.GetUserId();
+        // Get the matching cart and item instances
+        var cartItems1 = await _Cartrepo.Get(Endpoints.CartEndpoint);
+        // var count? = cartItems.Where(x => x.CanteenId == CanteenID && x.UserId == UserID).Select(x => x.Item).Count();  // User ID find From Session
+
+
+        // Get the count of each item in the cart and sum them up
+        int? count = (from cartItems in cartItems1
+                      where cartItems.CanteenId == CanteenID && cartItems.UserId == UserID
+                      select cartItems.Count).Sum();
+        // Return 0 if all entries are null
+        return count ?? 0;
+    }
+
+    public async Task<decimal> GetTotal()
+    {
+        // Multiply item price by count of that item to get
+        // the current price for each of those items in the cart
+        // sum all item price totals to get the cart total
+
+        //var user = (await authenticationStateTask).User;
+        var CanteenID = await _Cartrepo.GetCenteenId();
+        var UserID = await _Cartrepo.GetUserId();
+        // Get the matching cart and item instances
+        var cartItems1 = await _Cartrepo.Get(Endpoints.CartEndpoint);
+        decimal? total = (from cartItems in cartItems1
+                          where cartItems.CanteenId == CanteenID && cartItems.UserId == UserID
+                          select (int?)cartItems.Count *
+                          cartItems.Item.Price).Sum();
+
+        return total ?? decimal.Zero;
+    }
+
+}
